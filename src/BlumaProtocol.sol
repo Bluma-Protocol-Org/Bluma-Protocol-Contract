@@ -25,12 +25,11 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     IERC20 private MTRtoken;
 
-    event EventCreated(
-        uint256 indexed _totalEventsId,
-        uint256 indexed _seatNumber,
-        uint256 indexed _capacity
-    );
+    ///////////////
+    /// EVENTS ///
+    /////////////
 
+    event EventCreated(uint256 indexed _totalEventsId,uint256 indexed _seatNumber,uint256 indexed _capacity);
     event GroupCreated(uint256 indexed _roomId, string indexed imageUrl, string _title);
     event GroupJoinedSuccessfully(address indexed _sender, uint256 indexed _eventId);
     event RegistrationClose(uint256 indexed _currentTime, uint8 indexed _status);
@@ -39,13 +38,11 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     event EventClosed(uint256 indexed _eventId, uint256 indexed _currentTime);
 
 
-    struct User {
-        string email;
-        address userAddr;
-        bool isRegistered;
-        bytes32 avatar;
-        uint256 balance;
-    }
+  
+
+    /////////////////////
+    ///     ENUMS    ///
+    ////////////////////
 
     enum RegStatus {
         OPEN,
@@ -62,6 +59,18 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     enum EventType {
         PAID,
         FREE
+    }
+
+
+    ////////////////////
+    ///   Structs    ///
+    ///////////////////
+    struct User {
+        string email;
+        address userAddr;
+        bool isRegistered;
+        bytes32 avatar;
+        uint256 balance;
     }
 
     struct Event {
