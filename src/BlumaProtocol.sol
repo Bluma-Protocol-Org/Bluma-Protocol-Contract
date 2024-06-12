@@ -364,8 +364,8 @@ function updateRegStatus(uint256 _eventId) internal {
      * @dev Get the details of the user.
      * @return _user The details of the user.
      */
-    function getUser() external view returns (User memory _user) {
-        _user = user[msg.sender];
+    function getUser(address _addr) external view returns (User memory _user) {
+        _user = user[_addr];
     }
 
     /**

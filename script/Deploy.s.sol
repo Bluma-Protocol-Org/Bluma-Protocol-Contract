@@ -5,40 +5,28 @@ import {Script, console} from "forge-std/Script.sol";
 import {BlumaProtocol} from "../src/BlumaProtocol.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-
 contract DeployScript is Script {
-
     BlumaProtocol blumaProtocol;
     ERC1967Proxy proxy;
 
-
-
     function setUp() public {}
-
-
-
 
     function run() public {
         vm.startBroadcast();
 
+        // Deploy the implementation contract
         BlumaProtocol implementation = new BlumaProtocol();
+
         // Deploy the proxy and initialize the contract through the proxy
         proxy = new ERC1967Proxy(
             address(implementation),
-            abi.encodeCall(
-                implementation.initialize,( msg.sender))
+            abi.encodeWithSelector(implementation.initialize.selector, msg.sender)
         );
-        // Attach the MyToken interface to the deployed proxy
-        console.log("Proxy Address", address(proxy));
-        console.log("Bluma Protocol address", address(implementation));
+
+        // Log the addresses of the proxy and the implementation contract
+        console.log("Proxy Address:", address(proxy));
+        console.log("Bluma Protocol Implementation Address:", address(implementation));
 
         vm.stopBroadcast();
     }
 }
-
-
-// forge create --rpc-url https://rpctest.meter.io  --private-key ef257f59dc15ea8d0cfa7f5a177fb173b3125a3d79e6c13eb1e88831e40dc62c src/BlumaProtocol.sol:BlumaProtocol
-
-
-
-
