@@ -1,6 +1,11 @@
 ## Foundry
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Deployer: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
+## Deployed to: 0xe2c44434676d8DA368Fd44D2349C800AB4047478
+## Transaction hash: 0x94a6c21b9a37e014a816bd6034e2a36d5c36f4e7d7c972c7cbdf5d15f6e3c872
+## RPC: https://rpctest.meter.io
+## https://docs.meter.io/developer-documentation/introduction#testnet
+## ChainID: 83
 
 Foundry consists of:
 

@@ -69,7 +69,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         string email;
         address userAddr;
         bool isRegistered;
-        bytes32 avatar;
+        string avatar;
         uint256 balance;
     }
 
@@ -118,11 +118,15 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /**
      * @dev Update the email of the user.
      * @param _email The new email of the user.
+     * @param _avatar the image of the user 
      */
-    function updateEmail(string calldata _email) external {
-        User storage _user = user[msg.sender];
+    function createAccount(string memory _email, address _addr, string memory _avatar) external {
+        Validator._validateString(_email);
+        Validator._validateString(_avatar);
+        User storage _user = user[_addr];
         _user.email = _email;
         _user.isRegistered = true;
+        _user.avatar = _avatar;
     }
 
     /**
@@ -446,7 +450,7 @@ function updateRegStatus(uint256 _eventId) internal {
     function initialize(address initialOwner) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        MTRtoken = IERC20(0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC);
+        MTRtoken = IERC20(0x4cb6cEf87d8cADf966B455E8BD58ffF32aBA49D1);
     }
 
     /**
@@ -455,3 +459,4 @@ function updateRegStatus(uint256 _eventId) internal {
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
+
