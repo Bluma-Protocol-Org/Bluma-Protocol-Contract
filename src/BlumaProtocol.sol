@@ -126,6 +126,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         User storage _user = user[_addr];
         _user.email = _email;
         _user.isRegistered = true;
+        _user.userAddr = _addr;
         _user.avatar = _avatar;
     }
 
