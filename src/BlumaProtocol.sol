@@ -77,6 +77,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint32 eventId;
         bytes32 title;
         string imageUrl;
+        string location;
         string description;
         address creator;
         uint32 seats;
@@ -141,24 +142,25 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _eventStartTime The event start time.
      * @param _eventEndTime The event end time.
      * @param _ticketPrice The price of a ticket.
-     * @param _eventType The type of the event (PAID or FREE).
      */
     function createEvent(
         bytes32 _title,
         string calldata _imageUrl,
         string calldata _description,
+        string calldata _location,
         uint32 _capacity,
         uint256 _regStartTime,
         uint256 _regEndTime,
         uint256 _eventStartTime,
         uint256 _eventEndTime,
-        uint96 _ticketPrice,
-        EventType _eventType
+        uint96 _ticketPrice
     ) external {
         validateIsRegistered(msg.sender);
+
         Validator._validateBytes32(_title);
         Validator._validateString(_description);
         Validator._validateString(_imageUrl);
+        Validator._validateString(_location);
         Validator._validateNumbers(_regStartTime);
         Validator._validateNumbers(_regEndTime);
         Validator._validateNumbers(_eventStartTime);
@@ -171,16 +173,18 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
         Event storage _event = events[_totalEventsId];
 
-        if (block.timestamp < _regStartTime) {
+        if (currentTime() < _regStartTime) {
             _event.regStatus = RegStatus.PENDING;
         } else {
             _event.regStatus = RegStatus.OPEN;
         }
 
-        if (_eventType == EventType.PAID) {
-            _event.ticketPrice = _ticketPrice;
-        } else if (_eventType == EventType.FREE) {
+        if (_ticketPrice == 0) {
             _event.ticketPrice = 0;
+            _event.eventType =EventType.FREE;
+        } else  {
+              _event.eventType =EventType.PAID;
+              _event.ticketPrice = _ticketPrice;
         }
         _event.eventId = _totalEventsId;
         _event.title = _title;
@@ -188,13 +192,14 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _event.description = _description;
         _event.creator = msg.sender;
         _event.seats = _capacity;
+        _event.location = _location;
         _event.capacity = _capacity;
         _event.regStartTime = _regStartTime;
         _event.regEndTime = _regEndTime;
         _event.eventStartTime = _eventStartTime;
         _event.eventEndTime = _eventEndTime;
         _event.eventStatus = EventStatus.PENDING;
-        _event.createdAt = block.timestamp;
+        _event.createdAt = currentTime();
         eventList.push(_event);
         _createGroup(_event.eventId);
 
@@ -259,7 +264,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _event.seats = _event.seats + _numberOfTickets;
         _ticket.ticketId = _ticketId;
         _ticket.owner = msg.sender;
-        _ticket.purchaseTime = block.timestamp;
+        _ticket.purchaseTime = currentTime();
         _ticket.eventId = _eventId;
         _ticket.ticketCost = _ticket.ticketCost + _totalPrice;
         _ticket.numberOfTicket = _ticket.numberOfTicket + _numberOfTickets;
@@ -309,10 +314,11 @@ function updateRegStatus(uint32 _eventId) internal {
     _validateId(_eventId);
     Event storage _event = events[_eventId];
 
-    if (block.timestamp > _event.regEndTime) {
+    if (currentTime() > _event.regEndTime) {
         if (_event.regStatus != RegStatus.CLOSE) {
             _event.regStatus = RegStatus.CLOSE;
-            emit RegistrationClose(block.timestamp, uint8(RegStatus.CLOSE));
+            uint currentTime_ = currentTime();
+            emit RegistrationClose(currentTime_, uint8(RegStatus.CLOSE));
         }
     }
 }
@@ -325,7 +331,7 @@ function updateRegStatus(uint32 _eventId) internal {
         _validateId(_eventId);
         Event storage _event = events[_eventId];
 
-        if (block.timestamp >= _event.eventStartTime && block.timestamp <= _event.eventEndTime) {
+        if (currentTime() >= _event.eventStartTime && currentTime() <= _event.eventEndTime) {
             _event.eventStatus = EventStatus.OPEN;
         } else if (block.timestamp > _event.eventEndTime) {
             _event.eventStatus = EventStatus.CLOSE;
@@ -435,6 +441,10 @@ function updateRegStatus(uint32 _eventId) internal {
     function checkUserBalance(address _addr) external view returns(uint256 bal_){
         bal_ = user[_addr].balance;
     } 
+
+    function currentTime() internal view returns (uint256) {
+        return (block.timestamp * 1000) + 1000;
+    }
 
    /**
      * @dev Check the contract balance.

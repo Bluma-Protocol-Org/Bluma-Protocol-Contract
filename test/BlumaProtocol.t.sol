@@ -31,35 +31,37 @@ contract BlumaProtocolTest is Test {
         assertEq(  blumaProtocol.getUser(owner).email, "ebukizy1@gmail.com");
     }
 
+
     function testCreateEvent() public{
         testCreateAccount();
         switchSigner(owner);
         bytes32 _title = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
         string memory _imageUrl = "starknet.png";
         string memory _description = "the next generation of starknet event";
+        string memory _location = "no 7 ojo alaba";
         uint32 _capacity = 50;
 
         // Set the times based on the current block timestamp
-        uint256 _currentTime = block.timestamp;
+        uint256 _currentTime = currentTime();
         uint256 _regStartTime = _currentTime + 1 days; // Registration starts in 1 day
         uint256 _regEndTime = _currentTime + 7 days;   // Registration ends in 7 days
         uint256 _eventStartTime = _currentTime + 8 days; // Event starts in 8 days
         uint256 _eventEndTime = _currentTime + 9 days;   // Event ends in 9 days
         uint96 _ticketPrice = 100; // Example ticket price
-        BlumaProtocol.EventType _eventType = BlumaProtocol.EventType.PAID;
+
 
         // Create the event
         blumaProtocol.createEvent(
             _title,
             _imageUrl,
             _description,
+            _location,
             _capacity,
             _regStartTime,
             _regEndTime,
             _eventStartTime,
             _eventEndTime,
-            _ticketPrice,
-            _eventType
+            _ticketPrice
         );
 
         uint256 eventCount_ =  blumaProtocol.getAllEvents().length;
@@ -72,6 +74,9 @@ contract BlumaProtocolTest is Test {
     }
 
 
+     function currentTime() internal view returns (uint256) {
+        return (block.timestamp * 1000) + 1000;
+    }
 
    function mkaddr(string memory name) public returns (address) {
         address addr = address(
