@@ -10,14 +10,14 @@ import "./Library/Error.sol";
 import "./interface/IERC20.sol";
 
 contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
-    uint256 private _totalEventsId;
-    uint256 private _ticketId;
+    uint32 private _totalEventsId;
+    uint32 private _ticketId;
 
     mapping(address => User) private user;
-    mapping(uint256 => Event) private events;
+    mapping(uint32 => Event) private events;
     mapping(address => Ticket) private ticket;
-    mapping(uint256 => EventGroup) private rooms;
-    mapping(address => mapping(uint256 => bool)) private hasPurchasedEvent;
+    mapping(uint32=> EventGroup) private rooms;
+    mapping(address => mapping(uint32 => bool)) private hasPurchasedEvent;
 
     Event[] private eventList;
     EventGroup[] private roomList;
@@ -29,13 +29,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// EVENTS ///
     /////////////
 
-    event EventCreated(uint256 indexed _totalEventsId,uint256 indexed _seatNumber,uint256 indexed _capacity);
-    event GroupCreated(uint256 indexed _roomId, string indexed imageUrl, string _title);
-    event GroupJoinedSuccessfully(address indexed _sender, uint256 indexed _eventId);
+    event EventCreated(uint32 indexed _totalEventsId,uint32 indexed _seatNumber,uint32 indexed _capacity);
+    event GroupCreated(uint32 indexed _roomId, bytes32 imageUrl, bytes32 _title);
+    event GroupJoinedSuccessfully(address indexed _sender, uint32 indexed _eventId);
     event RegistrationClose(uint256 indexed _currentTime, uint8 indexed _status);
-    event TicketPurchased(address indexed buyer, uint256 indexed _eventId, uint256 numberOfTickets);
-    event RefundIssued(address indexed buyer, uint256 indexed _ticketId, uint256 indexed _eventId, uint256 amount);
-    event EventClosed(uint256 indexed _eventId, uint256 indexed _currentTime);
+    event TicketPurchased(address indexed buyer, uint32 indexed _eventId, uint32 numberOfTickets);
+    event RefundIssued(address indexed buyer, uint32 indexed _ticketId, uint32 indexed _eventId, uint256 amount);
+    event EventClosed(uint32 indexed _eventId, uint256 indexed _currentTime);
 
 
   
@@ -74,13 +74,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     struct Event {
-        uint256 eventId;
-        string title;
-        string imageUrl;
+        uint32 eventId;
+        bytes32 title;
+        bytes32 imageUrl;
         string description;
         address creator;
-        uint96 seats;
-        uint96 capacity;
+        uint32 seats;
+        uint32 capacity;
         uint256 regStartTime;
         uint256 regEndTime;
         RegStatus regStatus;
@@ -88,27 +88,27 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         EventType eventType;
         uint256 eventStartTime;
         uint256 eventEndTime;
-        uint256 ticketPrice;
+        uint96 ticketPrice;
         uint256 totalSales;
         uint256 createdAt;
         bool isCreatorPaid;
     }
 
     struct EventGroup {
-        uint256 eventId;
-        string title;
-        string imageUrl;
+        uint32 eventId;
+        bytes32 title;
+        bytes32 imageUrl;
         string description;
         address[] members;
     }
 
     struct Ticket {
-        uint ticketId;
-        uint eventId;
+        uint32 ticketId;
+        uint32 eventId;
         address owner;
         uint256 ticketCost;
         uint256 purchaseTime;
-        uint256 numberOfTicket;
+        uint32 numberOfTicket;
     }
 
     //////////////////
@@ -135,7 +135,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _title The title of the event.
      * @param _imageUrl The image URL of the event.
      * @param _description The description of the event.
-     * @param _seatNumber The number of seats available.
      * @param _capacity The capacity of the event.
      * @param _regStartTime The registration start time.
      * @param _regEndTime The registration end time.
@@ -145,31 +144,29 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _eventType The type of the event (PAID or FREE).
      */
     function createEvent(
-        string calldata _title,
-        string calldata _imageUrl,
+        bytes32 _title,
+        bytes32 _imageUrl,
         string calldata _description,
-        uint96 _seatNumber,
-        uint96 _capacity,
+        uint32 _capacity,
         uint256 _regStartTime,
         uint256 _regEndTime,
         uint256 _eventStartTime,
         uint256 _eventEndTime,
-        uint256 _ticketPrice,
+        uint96 _ticketPrice,
         EventType _eventType
     ) external {
-        Validator._validateString(_title);
+        Validator._validateBytes32(_title);
         Validator._validateString(_description);
-        Validator._validateString(_imageUrl);
+        Validator._validateBytes32(_imageUrl);
         Validator._validateNumbers(_regStartTime);
         Validator._validateNumbers(_regEndTime);
         Validator._validateNumbers(_eventStartTime);
         Validator._validateNumbers(_eventEndTime);
         Validator._validateNumbers(_ticketPrice);
-        Validator._validateNumber(_seatNumber);
         Validator._validateNumber(_capacity);
         Validator._validateTime(_eventStartTime, _eventEndTime);
         Validator._validateTime(_regStartTime, _regEndTime);
-        _totalEventsId++;
+        _totalEventsId = _totalEventsId + 1;
 
         Event storage _event = events[_totalEventsId];
 
@@ -189,7 +186,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _event.imageUrl = _imageUrl;
         _event.description = _description;
         _event.creator = msg.sender;
-        _event.seats = _seatNumber;
+        _event.seats = _capacity;
         _event.capacity = _capacity;
         _event.regStartTime = _regStartTime;
         _event.regEndTime = _regEndTime;
@@ -200,23 +197,25 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         eventList.push(_event);
         _createGroup(_event.eventId);
 
-        emit EventCreated(_totalEventsId, _seatNumber, _capacity);
+        emit EventCreated(_totalEventsId, _event.seats, _capacity);
     }
 
     /**
      * @dev Create a group for the event.
      * @param _eventId The ID of the event.
      */
-    function _createGroup(uint256 _eventId) internal {
+    function _createGroup(uint32 _eventId) internal {
         _validateId(_eventId);
-        if (rooms[_eventId].eventId != 0) revert GROUP_ALREADY_EXISTS();
-
+        
+    if (rooms[_eventId].eventId != 0) revert GROUP_ALREADY_EXISTS();
         Event storage _event = events[_eventId];
-        EventGroup storage _eventRoom = rooms[_eventId];
+        
+        EventGroup memory _eventRoom;
         _eventRoom.eventId = _eventId;
         _eventRoom.title = _event.title;
         _eventRoom.imageUrl = _event.imageUrl;
         _eventRoom.description = _event.description;
+        rooms[_eventId] = _eventRoom;
         roomList.push(_eventRoom);
         emit GroupCreated(_eventId, _event.imageUrl, _event.title);
     }
@@ -225,7 +224,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @dev Join an event group.
      * @param _eventId The ID of the event.
      */
-    function joinGroup(uint256 _eventId) external {
+    function joinGroup(uint32 _eventId) internal {
         _validateId(_eventId);
         if (!hasPurchasedEvent[msg.sender][_eventId]) revert INVALID_NOT_AUTHORIZED();
         EventGroup storage _eventRoom = rooms[_eventId];
@@ -238,12 +237,12 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _eventId The ID of the event.
      * @param _numberOfTickets The number of tickets to purchase.
      */
-    function purchaseTicket(uint256 _eventId, uint256 _numberOfTickets) external {
+    function purchaseTicket(uint32 _eventId, uint32 _numberOfTickets) external {
         _validateId(_eventId);
         Event storage _event = events[_eventId];
         if (_event.regStatus != RegStatus.OPEN) revert REGISTRATION_NOT_OPEN();
         if (_event.seats + _numberOfTickets > _event.capacity) revert NOT_ENOUGH_AVAILABLE_SEAT();
-        _ticketId++;
+        _ticketId =   _ticketId + 1;
         Ticket storage _ticket = ticket[msg.sender];
 
         uint256 _totalPrice = 0;
@@ -252,17 +251,17 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             if (MTRtoken.balanceOf(msg.sender) < _totalPrice) revert INSUFFICIENT_BALANCE();
             if (MTRtoken.allowance(msg.sender, address(this)) < _totalPrice) revert NO_ALLOWANCE();
             MTRtoken.transferFrom(msg.sender, address(this), _totalPrice);
-            _event.totalSales += _totalPrice;
-            _ticket.ticketCost += _totalPrice;
+            _event.totalSales = _event.totalSales + _totalPrice;
+            _ticket.ticketCost = _ticket.ticketCost + _totalPrice;
         }
 
-        _event.seats += uint96(_numberOfTickets);
+        _event.seats = _event.seats + _numberOfTickets;
         _ticket.ticketId = _ticketId;
         _ticket.owner = msg.sender;
         _ticket.purchaseTime = block.timestamp;
         _ticket.eventId = _eventId;
-        _ticket.ticketCost += _totalPrice;
-        _ticket.numberOfTicket += _numberOfTickets;
+        _ticket.ticketCost = _ticket.ticketCost + _totalPrice;
+        _ticket.numberOfTicket = _ticket.numberOfTicket + _numberOfTickets;
         tickets.push(_ticket);
         hasPurchasedEvent[msg.sender][_eventId] = true;
         emit TicketPurchased(msg.sender, _eventId, _numberOfTickets);
@@ -273,7 +272,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _eventId The ID of the event.
      * @param _numberOfTickets The number of tickets to refund.
      */
-    function refundFee(uint256 _eventId,  uint256 _numberOfTickets) external {
+    function refundFee(uint32 _eventId,  uint32 _numberOfTickets) external {
         _validateId(_eventId);
         Event storage _event = events[_eventId];
         updateRegStatus(_eventId);
@@ -288,15 +287,15 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         if(_ticket.numberOfTicket < _numberOfTickets) revert INSUFFICIENT_TICKET_PURCHASED();
 
         uint256 _totalPrice = _numberOfTickets * _event.ticketPrice;
-        _event.seats -= uint96(_numberOfTickets);
-        _event.totalSales -= _totalPrice;
-        _ticket.numberOfTicket -=_numberOfTickets;
+        _event.seats = _event.seats - _numberOfTickets;
+        _event.totalSales =   _event.totalSales - _totalPrice;
+        _ticket.numberOfTicket = _ticket.numberOfTicket -_numberOfTickets;
         if(_ticket.numberOfTicket == 0){
         hasPurchasedEvent[msg.sender][_eventId] = false;
         }
         MTRtoken.transfer(msg.sender, _totalPrice);
 
-        emit RefundIssued(msg.sender, _ticket.ticketId, _totalPrice, _eventId);
+        emit RefundIssued(msg.sender, _ticket.ticketId, _eventId, _totalPrice);
     }
 
       
@@ -305,7 +304,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
  * @dev Update registration status based on time.
  * @param _eventId The ID of the event.
  */
-function updateRegStatus(uint256 _eventId) internal {
+function updateRegStatus(uint32 _eventId) internal {
     _validateId(_eventId);
     Event storage _event = events[_eventId];
 
@@ -321,7 +320,7 @@ function updateRegStatus(uint256 _eventId) internal {
      * @dev Update the status of the event based on the current time.
      * @param _eventId The ID of the event.
      */
-    function updateEventStatus(uint256 _eventId) public {
+    function updateEventStatus(uint32 _eventId) public {
         _validateId(_eventId);
         Event storage _event = events[_eventId];
 
@@ -337,7 +336,7 @@ function updateRegStatus(uint256 _eventId) internal {
      * @dev Withdraw event fees by the event creator.
      * @param _eventId The ID of the event.
      */
-    function withdrawEventFee(uint256 _eventId) external {
+    function withdrawEventFee(uint32 _eventId) external {
         _validateId(_eventId);
         Event storage _event = events[_eventId];
         User storage _user = user[msg.sender];
@@ -351,7 +350,7 @@ function updateRegStatus(uint256 _eventId) internal {
         uint256 amount_ = _event.totalSales;
         _event.totalSales = 0;
         _event.isCreatorPaid = true;
-        _user.balance += amount_;
+        _user.balance =_user.balance + amount_;
         MTRtoken.transfer(msg.sender, amount_);
     }
 
@@ -382,7 +381,7 @@ function updateRegStatus(uint256 _eventId) internal {
      * @param _eventId The ID of the event.
      * @return _events The details of the event.
      */
-    function getEvent(uint256 _eventId) external view returns (Event memory _events) {
+    function getEvent(uint32 _eventId) external view returns (Event memory _events) {
         _validateId(_eventId);
         _events = events[_eventId];
     }
@@ -392,7 +391,7 @@ function updateRegStatus(uint256 _eventId) internal {
      * @param _eventId The ID of the event.
      * @return _members The members of the event group.
      */
-    function getGroupMembers(uint256 _eventId) external view returns (address[] memory _members) {
+    function getGroupMembers(uint32 _eventId) external view returns (address[] memory _members) {
         _validateId(_eventId);
         _members = rooms[_eventId].members;
     }
@@ -440,7 +439,7 @@ function updateRegStatus(uint256 _eventId) internal {
      * @dev Validate the ID of an event.
      * @param _eventId The ID of the event.
      */
-    function _validateId(uint256 _eventId) private view {
+    function _validateId(uint32 _eventId) private view {
         if (_eventId > _totalEventsId) revert INVALID_ID();
     }
 

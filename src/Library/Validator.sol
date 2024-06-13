@@ -10,6 +10,12 @@ library Validator {
         if(bytes(_text).length < 1) revert EMPTY_INPUT_FIELD();
     }
 
+      function _validateBytes32(bytes32 _value) internal pure{
+        if(_value.length < 1) revert EMPTY_INPUT_FIELD();
+    }
+
+
+
     function _validateNumbers(uint256 _number) internal pure{
         if(_number < 1) revert EMPTY_INPUT_FIELD();
     }
