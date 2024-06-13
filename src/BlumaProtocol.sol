@@ -155,6 +155,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint96 _ticketPrice,
         EventType _eventType
     ) external {
+        validateIsRegistered(msg.sender);
         Validator._validateBytes32(_title);
         Validator._validateString(_description);
         Validator._validateString(_imageUrl);
@@ -370,20 +371,20 @@ function updateRegStatus(uint32 _eventId) internal {
 
     /**
      * @dev Get the details of all events.
-     * @return _events The details of all events.
+     * @return events_ The details of all events.
      */
-    function getAllEvents() external view returns (Event[] memory _events) {
-        _events = eventList;
+    function getAllEvents() external view returns (Event[] memory events_) {
+        events_ = eventList;
     }
 
     /**
      * @dev Get the details of a specific event.
      * @param _eventId The ID of the event.
-     * @return _events The details of the event.
+     * @return events_ The details of the event.
      */
-    function getEvent(uint32 _eventId) external view returns (Event memory _events) {
+    function getEvent(uint32 _eventId) external view returns (Event memory events_) {
         _validateId(_eventId);
-        _events = events[_eventId];
+        events_ = events[_eventId];
     }
 
     /**
@@ -395,6 +396,15 @@ function updateRegStatus(uint32 _eventId) internal {
         _validateId(_eventId);
         _members = rooms[_eventId].members;
     }
+
+    function getAllEventGroups() external view returns(EventGroup [] memory group_){
+        group_ = roomList;
+    }
+
+    function getEventGroup(uint32 _groupId) external view returns(EventGroup memory group_){
+        group_ = rooms[_groupId];
+    }
+
 
     /**
      * @dev Get the list of tickets purchased.
@@ -441,6 +451,9 @@ function updateRegStatus(uint32 _eventId) internal {
      */
     function _validateId(uint32 _eventId) private view {
         if (_eventId > _totalEventsId) revert INVALID_ID();
+    }
+      function validateIsRegistered(address _user) private view{
+          if(!user[_user].isRegistered) revert USER_NOT_REGISTERED();
     }
 
     /**

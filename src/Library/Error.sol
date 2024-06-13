@@ -20,4 +20,5 @@ error INVALID_EVENT_ID();
 error EVENT_NOT_CLOSED();
 error NOT_CREATOR();
 error ALREADY_PAID();
+error USER_NOT_REGISTERED();
 
