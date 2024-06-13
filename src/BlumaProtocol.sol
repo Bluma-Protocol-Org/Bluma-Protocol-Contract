@@ -30,7 +30,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /////////////
 
     event EventCreated(uint32 indexed _totalEventsId,uint32 indexed _seatNumber,uint32 indexed _capacity);
-    event GroupCreated(uint32 indexed _roomId, bytes32 imageUrl, bytes32 _title);
+    event GroupCreated(uint32 indexed _roomId, string imageUrl, bytes32 _title);
     event GroupJoinedSuccessfully(address indexed _sender, uint32 indexed _eventId);
     event RegistrationClose(uint256 indexed _currentTime, uint8 indexed _status);
     event TicketPurchased(address indexed buyer, uint32 indexed _eventId, uint32 numberOfTickets);
@@ -76,7 +76,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     struct Event {
         uint32 eventId;
         bytes32 title;
-        bytes32 imageUrl;
+        string imageUrl;
         string description;
         address creator;
         uint32 seats;
@@ -97,7 +97,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     struct EventGroup {
         uint32 eventId;
         bytes32 title;
-        bytes32 imageUrl;
+        string imageUrl;
         string description;
         address[] members;
     }
@@ -145,7 +145,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      */
     function createEvent(
         bytes32 _title,
-        bytes32 _imageUrl,
+        string calldata _imageUrl,
         string calldata _description,
         uint32 _capacity,
         uint256 _regStartTime,
@@ -157,7 +157,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     ) external {
         Validator._validateBytes32(_title);
         Validator._validateString(_description);
-        Validator._validateBytes32(_imageUrl);
+        Validator._validateString(_imageUrl);
         Validator._validateNumbers(_regStartTime);
         Validator._validateNumbers(_regEndTime);
         Validator._validateNumbers(_eventStartTime);
