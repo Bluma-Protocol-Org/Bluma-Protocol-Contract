@@ -48,6 +48,7 @@ contract BlumaProtocolTest is Test {
         uint256 _eventStartTime = _currentTime + 8 days; // Event starts in 8 days
         uint256 _eventEndTime = _currentTime + 9 days;   // Event ends in 9 days
         uint96 _ticketPrice = 100; // Example ticket price
+        bool _eventStatus = true;
 
 
         // Create the event
@@ -61,7 +62,8 @@ contract BlumaProtocolTest is Test {
             _regEndTime,
             _eventStartTime,
             _eventEndTime,
-            _ticketPrice
+            _ticketPrice,
+            _eventStatus
         );
 
         uint256 eventCount_ =  blumaProtocol.getAllEvents().length;

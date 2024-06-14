@@ -142,6 +142,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _eventStartTime The event start time.
      * @param _eventEndTime The event end time.
      * @param _ticketPrice The price of a ticket.
+     * @param _isEventPaid the event status if free_paid 
      */
     function createEvent(
         bytes32 _title,
@@ -153,7 +154,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 _regEndTime,
         uint256 _eventStartTime,
         uint256 _eventEndTime,
-        uint96 _ticketPrice
+        uint96 _ticketPrice,
+        bool _isEventPaid
     ) external {
         validateIsRegistered(msg.sender);
 
@@ -179,12 +181,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             _event.regStatus = RegStatus.OPEN;
         }
 
-        if (_ticketPrice == 0) {
-            _event.ticketPrice = 0;
-            _event.eventType =EventType.FREE;
-        } else  {
+        if ( _isEventPaid == true) {
               _event.eventType =EventType.PAID;
               _event.ticketPrice = _ticketPrice;
+        } else  {
+              _event.ticketPrice = 0;
+            _event.eventType =EventType.FREE;
+            
         }
         _event.eventId = _totalEventsId;
         _event.title = _title;
