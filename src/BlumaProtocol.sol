@@ -194,7 +194,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _event.imageUrl = _imageUrl;
         _event.description = _description;
         _event.creator = msg.sender;
-        _event.seats = _capacity;
         _event.location = _location;
         _event.capacity = _capacity;
         _event.regStartTime = _regStartTime;
@@ -250,7 +249,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _validateId(_eventId);
         Event storage _event = events[_eventId];
         if (_event.regStatus != RegStatus.OPEN) revert REGISTRATION_NOT_OPEN();
-        if (_event.seats + _numberOfTickets > _event.capacity) revert NOT_ENOUGH_AVAILABLE_SEAT();
+            _event.seats = _event.seats + _numberOfTickets; 
+        if ( _event.seats > _event.capacity) revert NOT_ENOUGH_AVAILABLE_SEAT();
         _ticketId =   _ticketId + 1;
         Ticket storage _ticket = ticket[msg.sender];
 
