@@ -68,7 +68,7 @@ contract BlumaProtocolTest is Test {
 
         uint256 eventCount_ =  blumaProtocol.getAllEvents().length;
         assertEq(eventCount_, 1);
-        assertEq(blumaProtocol.getEvent(1).ticketPrice, 100);
+        assertEq(blumaProtocol.getEventById(1).ticketPrice, 100);
 
         //note check group is created
         uint256 groupCount_ = blumaProtocol.getAllEventGroups().length;

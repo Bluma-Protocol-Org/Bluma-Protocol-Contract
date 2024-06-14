@@ -27,6 +27,7 @@ contract DeployScript is Script {
         console.log("Proxy Address:", address(proxy));
         console.log("Bluma Protocol Implementation Address:", address(implementation));
 
+
         vm.stopBroadcast();
     }
 }

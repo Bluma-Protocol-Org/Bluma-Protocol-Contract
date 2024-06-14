@@ -391,7 +391,7 @@ function updateRegStatus(uint32 _eventId) internal {
      * @param _eventId The ID of the event.
      * @return events_ The details of the event.
      */
-    function getEvent(uint32 _eventId) external view returns (Event memory events_) {
+    function getEventById(uint32 _eventId) external view returns (Event memory events_) {
         _validateId(_eventId);
         events_ = events[_eventId];
     }
