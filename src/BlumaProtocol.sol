@@ -336,9 +336,9 @@ function updateRegStatus(uint32 _eventId) internal {
 
         if (currentTime() >= _event.eventStartTime && currentTime() <= _event.eventEndTime) {
             _event.eventStatus = EventStatus.OPEN;
-        } else if (block.timestamp > _event.eventEndTime) {
+        } else if (currentTime() > _event.eventEndTime) {
             _event.eventStatus = EventStatus.CLOSE;
-            emit EventClosed(_eventId, block.timestamp);
+            emit EventClosed(_eventId, currentTime());
         }
     }
 
