@@ -36,6 +36,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     event TicketPurchased(address indexed buyer, uint32 indexed _eventId, uint32 numberOfTickets);
     event RefundIssued(address indexed buyer, uint32 indexed _ticketId, uint32 indexed _eventId, uint256 amount);
     event EventClosed(uint32 indexed _eventId, uint256 indexed _currentTime);
+    event MessageSent(address indexed sender, uint32 indexed groupId, string text, uint256 timestamp);
+
 
 
   
@@ -100,7 +102,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         bytes32 title;
         string imageUrl;
         string description;
-        address[] members;
+        Member [] members;
+        Message [] messages;
+        
+    }
+    struct Member {
+        address user;
+        uint256 joinTime;
     }
 
     struct Ticket {
@@ -110,6 +118,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 ticketCost;
         uint256 purchaseTime;
         uint32 numberOfTicket;
+    }
+
+    struct Message{
+        address sender;
+        string email;
+        string text;
+        uint256 timestamp;
     }
 
     //////////////////
@@ -232,11 +247,16 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @dev Join an event group.
      * @param _eventId The ID of the event.
      */
-    function joinGroup(uint32 _eventId) internal {
+    function joinGroup(uint32 _eventId) external {
         _validateId(_eventId);
         if (!hasPurchasedEvent[msg.sender][_eventId]) revert INVALID_NOT_AUTHORIZED();
         EventGroup storage _eventRoom = rooms[_eventId];
-        _eventRoom.members.push(msg.sender);
+
+          _eventRoom.members.push(Member({
+            user: msg.sender,
+            joinTime: block.timestamp
+        }));
+
         emit GroupJoinedSuccessfully(msg.sender, _eventId);
     }
 
@@ -274,6 +294,32 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         tickets.push(_ticket);
         hasPurchasedEvent[msg.sender][_eventId] = true;
         emit TicketPurchased(msg.sender, _eventId, _numberOfTickets);
+    }
+
+
+    function groupChat(uint32 _groupId, string calldata _text) external {
+        _validateId(_groupId);
+        Validator._validateString(_text);
+        // Ensure the sender is a member of the group
+        EventGroup storage _group = rooms[_groupId];
+        bool isMember = false;
+        for (uint256 i = 0; i < _group.members.length; i++) {
+            if (_group.members[i].user == msg.sender) {
+                isMember = true;
+                break;
+            }
+        }
+
+        if (!isMember) revert INVALID_NOT_AUTHORIZED();
+        // Add the message to the group's message list
+        Message memory _message;
+        _message.email = user[msg.sender].email;
+        _message.sender = msg.sender;
+        _message.text = _text;
+        _message.timestamp = currentTime();
+        _group.messages.push(_message);
+
+        emit MessageSent(msg.sender, _groupId, _text, _message.timestamp);
     }
 
     /**
@@ -401,7 +447,7 @@ function updateRegStatus(uint32 _eventId) internal {
      * @param _eventId The ID of the event.
      * @return _members The members of the event group.
      */
-    function getGroupMembers(uint32 _eventId) external view returns (address[] memory _members) {
+    function getGroupMembers(uint32 _eventId) external view returns (Member [] memory _members) {
         _validateId(_eventId);
         _members = rooms[_eventId].members;
     }
@@ -425,6 +471,11 @@ function updateRegStatus(uint32 _eventId) internal {
 
     function getTicket(address _addr) external view returns(Ticket memory _ticket){
         _ticket = ticket[_addr];
+    }
+
+        function getGroupMessages(uint32 _groupId) external view returns (Message[] memory) {
+        _validateId(_groupId);
+        return rooms[_groupId].messages;
     }
 
     /**

@@ -1,8 +1,8 @@
 ## Foundry
 
 ##Deployer: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-Deployed to: 0x612872935B5F21764031BDe47B2aE3D049076fc9
-Transaction hash: 0xc67df89ccdcf83133fba6d2352174a6629362d48231ad425c6e7ee47a0692f62
+Deployed to: 0x318B3492707B3912e77FA1837A447cdFD63d0FA3
+Transaction hash: 0xd1eedb1f078468f4eab907fb85a797b97e596ff0209e5dda3747b5971de1bb7b
 ## RPC: https://rpctest.meter.io
 ## https://docs.meter.io/developer-documentation/introduction#testnet
 ## ChainID: 83
