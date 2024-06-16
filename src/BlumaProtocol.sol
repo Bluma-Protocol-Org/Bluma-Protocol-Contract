@@ -31,7 +31,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     event EventCreated(uint32 indexed _totalEventsId,uint32 indexed _seatNumber,uint32 indexed _capacity);
     event GroupCreated(uint32 indexed _roomId, string imageUrl, bytes32 _title);
-    event GroupJoinedSuccessfully(address indexed _sender, uint32 indexed _eventId);
+    event GroupJoinedSuccessfully(address indexed _sender, uint32 indexed _eventId, uint256 indexed _joinedTimw);
     event RegistrationClose(uint256 indexed _currentTime, uint8 indexed _status);
     event TicketPurchased(address indexed buyer, uint32 indexed _eventId, uint32 numberOfTickets);
     event RefundIssued(address indexed buyer, uint32 indexed _ticketId, uint32 indexed _eventId, uint256 amount);
@@ -254,10 +254,10 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
           _eventRoom.members.push(Member({
             user: msg.sender,
-            joinTime: block.timestamp
+            joinTime: currentTime()
         }));
 
-        emit GroupJoinedSuccessfully(msg.sender, _eventId);
+        emit GroupJoinedSuccessfully(msg.sender, _eventId, currentTime());
     }
 
     /**
@@ -473,9 +473,18 @@ function updateRegStatus(uint32 _eventId) internal {
         _ticket = ticket[_addr];
     }
 
-        function getGroupMessages(uint32 _groupId) external view returns (Message[] memory) {
+    function getAllGroupMessages(uint32 _groupId) external view returns (Message[] memory) {
         _validateId(_groupId);
         return rooms[_groupId].messages;
+    }
+
+    function getGroupMember(uint32 _groupId, uint _index) external view returns (Member memory) {
+        _validateId(_groupId);
+        EventGroup storage group = rooms[_groupId];
+
+        if (_index >= group.members.length) revert INVALID_ID();
+        
+        return group.members[_index];
     }
 
     /**
