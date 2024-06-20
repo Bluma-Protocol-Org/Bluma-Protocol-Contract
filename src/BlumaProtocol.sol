@@ -22,6 +22,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     Event[] private eventList;
     EventGroup[] private roomList;
     Ticket[] private tickets;
+    User [] usersList;
 
     IERC20 private MTRtoken;
 
@@ -144,6 +145,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _user.isRegistered = true;
         _user.userAddr = _addr;
         _user.avatar = _avatar;
+        usersList.push(_user);
     }
 
     /**
@@ -217,7 +219,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _event.eventEndTime = _eventEndTime;
         _event.eventStatus = EventStatus.PENDING;
         _event.createdAt = currentTime();
-        eventList.push(_event);
         _createGroup(_event.eventId);
 
         emit EventCreated(_totalEventsId, _event.seats, _capacity);
@@ -233,12 +234,18 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     if (rooms[_eventId].eventId != 0) revert GROUP_ALREADY_EXISTS();
         Event storage _event = events[_eventId];
         
-        EventGroup memory _eventRoom;
+
+        EventGroup storage _eventRoom = rooms[_eventId];
         _eventRoom.eventId = _eventId;
         _eventRoom.title = _event.title;
         _eventRoom.imageUrl = _event.imageUrl;
         _eventRoom.description = _event.description;
-        rooms[_eventId] = _eventRoom;
+
+          _eventRoom.members.push(Member({
+            user: _event.creator,
+            joinTime: currentTime()
+        }));
+
         roomList.push(_eventRoom);
         emit GroupCreated(_eventId, _event.imageUrl, _event.title);
     }
@@ -249,9 +256,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      */
     function joinGroup(uint32 _eventId) external {
         _validateId(_eventId);
-        if (!hasPurchasedEvent[msg.sender][_eventId]) revert INVALID_NOT_AUTHORIZED();
         EventGroup storage _eventRoom = rooms[_eventId];
 
+        for (uint i = 0; i < _eventRoom.members.length; i++) {
+            if (_eventRoom.members[i].user == msg.sender) {
+                revert ALREADY_A_MEMBER();
+            }
+        }
           _eventRoom.members.push(Member({
             user: msg.sender,
             joinTime: currentTime()
@@ -284,7 +295,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             _ticket.ticketCost = _ticket.ticketCost + _totalPrice;
         }
 
-        _event.seats = _event.seats + _numberOfTickets;
         _ticket.ticketId = _ticketId;
         _ticket.owner = msg.sender;
         _ticket.purchaseTime = currentTime();
@@ -424,13 +434,32 @@ function updateRegStatus(uint32 _eventId) internal {
         _user = user[_addr];
     }
 
-    /**
-     * @dev Get the details of all events.
-     * @return events_ The details of all events.
-     */
-    function getAllEvents() external view returns (Event[] memory events_) {
-        events_ = eventList;
+   /**
+ * @dev Get the details of all events.
+ * @return events_ The details of all events.
+ */
+function getAllEvents() external view returns (Event[] memory) {
+    Event[] memory events_ = new Event[](_totalEventsId);
+ 
+    uint32 counter = 0;
+    // Iterate over the possible event IDs
+    for (uint32 i = 1; i <= _totalEventsId; i++) {
+        if (events[i].eventId != 0) {    
+            events_[counter] = events[i];
+            counter++;
+        }
     }
+
+    // Create a new array with the exact size of existing events
+    Event[] memory allEvents = new Event[](counter);
+    // Copy the events to the new array
+    for (uint32 j = 0; j < counter; j++) {
+        allEvents[j] = events_[j];
+    }
+    
+    return allEvents;
+}
+
 
     /**
      * @dev Get the details of a specific event.
@@ -485,6 +514,10 @@ function updateRegStatus(uint32 _eventId) internal {
         if (_index >= group.members.length) revert INVALID_ID();
         
         return group.members[_index];
+    }
+
+    function getAllUser() external view returns (User [] memory) {
+        return usersList;
     }
 
     /**

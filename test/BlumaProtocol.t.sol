@@ -75,6 +75,10 @@ contract BlumaProtocolTest is Test {
         assertEq(groupCount_ , 1);
     }
 
+    function testJoinGroup() public {
+    
+    }
+
 
      function currentTime() internal view returns (uint256) {
         return (block.timestamp * 1000) + 1000;

@@ -21,4 +21,5 @@ error EVENT_NOT_CLOSED();
 error NOT_CREATOR();
 error ALREADY_PAID();
 error USER_NOT_REGISTERED();
+error  ALREADY_A_MEMBER();
 
