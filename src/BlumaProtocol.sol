@@ -18,6 +18,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     mapping(address => Ticket) private ticket;
     mapping(uint32=> EventGroup) private rooms;
     mapping(address => mapping(uint32 => bool)) private hasPurchasedEvent;
+    mapping(address user => mapping(uint32 => bool _groupId))hasJoinedGroup;
 
     Event[] private eventList;
     EventGroup[] private roomList;
@@ -245,6 +246,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             user: _event.creator,
             joinTime: currentTime()
         }));
+           hasJoinedGroup[_event.creator][_eventId] = true;
 
         roomList.push(_eventRoom);
         emit GroupCreated(_eventId, _event.imageUrl, _event.title);
@@ -257,16 +259,14 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function joinGroup(uint32 _eventId) external {
         _validateId(_eventId);
         EventGroup storage _eventRoom = rooms[_eventId];
+        if(_eventRoom.eventId == 0) revert INVALID_ID();
+        if(hasJoinedGroup[msg.sender][_eventId]) revert ALREADY_A_MEMBER();
 
-        for (uint i = 0; i < _eventRoom.members.length; i++) {
-            if (_eventRoom.members[i].user == msg.sender) {
-                revert ALREADY_A_MEMBER();
-            }
-        }
           _eventRoom.members.push(Member({
             user: msg.sender,
             joinTime: currentTime()
         }));
+        hasJoinedGroup[msg.sender][_eventId] = true;
 
         emit GroupJoinedSuccessfully(msg.sender, _eventId, currentTime());
     }
@@ -310,17 +310,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function groupChat(uint32 _groupId, string calldata _text) external {
         _validateId(_groupId);
         Validator._validateString(_text);
+
         // Ensure the sender is a member of the group
         EventGroup storage _group = rooms[_groupId];
-        bool isMember = false;
-        for (uint256 i = 0; i < _group.members.length; i++) {
-            if (_group.members[i].user == msg.sender) {
-                isMember = true;
-                break;
-            }
-        }
+        if(_group.eventId == 0) revert INVALID_ID();
 
-        if (!isMember) revert INVALID_NOT_AUTHORIZED();
+        if(!hasJoinedGroup[msg.sender][_groupId]) revert INVALID_NOT_AUTHORIZED();
+
         // Add the message to the group's message list
         Message memory _message;
         _message.email = user[msg.sender].email;
@@ -440,7 +436,7 @@ function updateRegStatus(uint32 _eventId) internal {
  */
 function getAllEvents() external view returns (Event[] memory) {
     Event[] memory events_ = new Event[](_totalEventsId);
- 
+
     uint32 counter = 0;
     // Iterate over the possible event IDs
     for (uint32 i = 1; i <= _totalEventsId; i++) {
@@ -449,7 +445,6 @@ function getAllEvents() external view returns (Event[] memory) {
             counter++;
         }
     }
-
     // Create a new array with the exact size of existing events
     Event[] memory allEvents = new Event[](counter);
     // Copy the events to the new array
