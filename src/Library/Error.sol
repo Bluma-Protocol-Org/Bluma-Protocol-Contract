@@ -22,4 +22,12 @@ error NOT_CREATOR();
 error ALREADY_PAID();
 error USER_NOT_REGISTERED();
 error  ALREADY_A_MEMBER();
-
+error ERC20InsufficientAllowance();
+error ExceedTotalAmountMinted();
+error USER_ALREADY_EXCEED_LIMIT();
+error EXCEED_TOTAL_SUPPLY_CAP();
+error ONLY_CREATOR_CAN_MINT();
+error REGISTRATION_NOT_CLOSED();
+error INVALID_GROUP_ID();
+error NFT_ALREADY_MINTED();
+error NO_TOKEN_ID_FOUND();

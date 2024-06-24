@@ -7,25 +7,66 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Validator} from "../src/Library/Validator.sol";
 import "./Library/Error.sol";
-import "./interface/IERC20.sol";
+import "./interface/IERC20s.sol";
+import "./interface/IERC721s.sol";
 
+
+/// @title The Proxy Contract for the protocol
+/// @notice This uses the EIP1822 UUPS standard from the OpenZeppelin library
+/// @dev This contract manages events, tickets, users, event groups and chatting
 contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+
+    ///////////////////////////
+    ///                     ///
+    /// STATE VARIABLES    ///
+    ///                   ///
+    ////////////////////////
+
+    /// @notice Tracks the total number of events created
     uint32 private _totalEventsId;
+
+    /// @notice Tracks the total number of tickets created
     uint32 private _ticketId;
 
+    /// @notice Maps user addresses to User struct
     mapping(address => User) private user;
+
+    /// @notice Maps event IDs to Event struct
     mapping(uint32 => Event) private events;
+
+    /// @notice Maps user addresses to Ticket struct
     mapping(address => Ticket) private ticket;
-    mapping(uint32=> EventGroup) private rooms;
+
+    /// @notice Maps event group IDs to EventGroup struct
+    mapping(uint32 => EventGroup) private rooms;
+
+    /// @notice Tracks if a user has purchased a ticket for a specific event
+    /// @dev First mapping is user address, second mapping is event ID, value is boolean
     mapping(address => mapping(uint32 => bool)) private hasPurchasedEvent;
-    mapping(address user => mapping(uint32 => bool _groupId))hasJoinedGroup;
 
+    /// @notice Tracks if a user has joined a specific event group
+    /// @dev First mapping is user address, second mapping is event group ID, value is boolean
+    mapping(address user => mapping(uint32 => bool _groupId)) hasJoinedGroup;
+
+    /// @notice List of all events
     Event[] private eventList;
-    EventGroup[] private roomList;
-    Ticket[] private tickets;
-    User [] usersList;
 
-    IERC20 private MTRtoken;
+    /// @notice List of all event groups
+    EventGroup[] private roomList;
+
+    /// @notice List of all tickets
+    Ticket[] private tickets;
+
+    /// @notice List of all users
+    User[] private usersList;
+
+    /// @notice ERC20 token used in the protocol
+    IERC20s private blumaToken;
+
+    /// @notice ERC721 token used in the protocol
+    IERC721s private blumaNFT;
+
+
 
     ///////////////
     /// EVENTS ///
@@ -39,6 +80,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     event RefundIssued(address indexed buyer, uint32 indexed _ticketId, uint32 indexed _eventId, uint256 amount);
     event EventClosed(uint32 indexed _eventId, uint256 indexed _currentTime);
     event MessageSent(address indexed sender, uint32 indexed groupId, string text, uint256 timestamp);
+    event AttendeesNFTMinted(address indexed owner, uint32 indexed eventId, uint32 numberOfTickets, uint256  indexed tokenId);
+
 
 
 
@@ -91,12 +134,14 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         RegStatus regStatus;
         EventStatus eventStatus;
         EventType eventType;
+        string nftUrl;
         uint256 eventStartTime;
         uint256 eventEndTime;
         uint96 ticketPrice;
         uint256 totalSales;
         uint256 createdAt;
         bool isCreatorPaid;
+        bool hasMinted;
     }
 
     struct EventGroup {
@@ -154,6 +199,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _title The title of the event.
      * @param _imageUrl The image URL of the event.
      * @param _description The description of the event.
+     * @param _location thelocation of the event;
      * @param _capacity The capacity of the event.
      * @param _regStartTime The registration start time.
      * @param _regEndTime The registration end time.
@@ -161,6 +207,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _eventEndTime The event end time.
      * @param _ticketPrice The price of a ticket.
      * @param _isEventPaid the event status if free_paid 
+     * @param _nftUrl the nft cid for the event;
      */
     function createEvent(
         bytes32 _title,
@@ -173,12 +220,14 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 _eventStartTime,
         uint256 _eventEndTime,
         uint96 _ticketPrice,
-        bool _isEventPaid
+        bool _isEventPaid,
+        string calldata _nftUrl
     ) external {
         validateIsRegistered(msg.sender);
 
         Validator._validateBytes32(_title);
         Validator._validateString(_description);
+        Validator._validateString(_nftUrl);
         Validator._validateString(_imageUrl);
         Validator._validateString(_location);
         Validator._validateNumbers(_regStartTime);
@@ -207,6 +256,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             _event.eventType =EventType.FREE;
             
         }
+
         _event.eventId = _totalEventsId;
         _event.title = _title;
         _event.imageUrl = _imageUrl;
@@ -220,6 +270,11 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _event.eventEndTime = _eventEndTime;
         _event.eventStatus = EventStatus.PENDING;
         _event.createdAt = currentTime();
+        _event.nftUrl = _nftUrl;
+
+        //mint nfts to the event creator
+        IERC721s(blumaNFT).safeMint(msg.sender, _nftUrl);
+        
         _createGroup(_event.eventId);
 
         emit EventCreated(_totalEventsId, _event.seats, _capacity);
@@ -252,6 +307,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         emit GroupCreated(_eventId, _event.imageUrl, _event.title);
     }
 
+
     /**
      * @dev Join an event group.
      * @param _eventId The ID of the event.
@@ -271,6 +327,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         emit GroupJoinedSuccessfully(msg.sender, _eventId, currentTime());
     }
 
+
     /**
      * @dev Purchase tickets for an event.
      * @param _eventId The ID of the event.
@@ -288,9 +345,9 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 _totalPrice = 0;
         if (_event.eventType == EventType.PAID) {
             _totalPrice = _numberOfTickets * _event.ticketPrice;
-            if (MTRtoken.balanceOf(msg.sender) < _totalPrice) revert INSUFFICIENT_BALANCE();
-            if (MTRtoken.allowance(msg.sender, address(this)) < _totalPrice) revert NO_ALLOWANCE();
-            MTRtoken.transferFrom(msg.sender, address(this), _totalPrice);
+            if (blumaToken.balanceOf(msg.sender) < _totalPrice) revert INSUFFICIENT_BALANCE();
+            if (blumaToken.allowance(msg.sender, address(this)) < _totalPrice) revert NO_ALLOWANCE();
+            blumaToken.transferFrom(msg.sender, address(this), _totalPrice);
             _event.totalSales = _event.totalSales + _totalPrice;
             _ticket.ticketCost = _ticket.ticketCost + _totalPrice;
         }
@@ -305,6 +362,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         hasPurchasedEvent[msg.sender][_eventId] = true;
         emit TicketPurchased(msg.sender, _eventId, _numberOfTickets);
     }
+
 
 
     function groupChat(uint32 _groupId, string calldata _text) external {
@@ -354,7 +412,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         if(_ticket.numberOfTicket == 0){
         hasPurchasedEvent[msg.sender][_eventId] = false;
         }
-        MTRtoken.transfer(msg.sender, _totalPrice);
+        blumaToken.transfer(msg.sender, _totalPrice);
 
         emit RefundIssued(msg.sender, _ticket.ticketId, _eventId, _totalPrice);
     }
@@ -413,8 +471,36 @@ function updateRegStatus(uint32 _eventId) internal {
         _event.totalSales = 0;
         _event.isCreatorPaid = true;
         _user.balance =_user.balance + amount_;
-        MTRtoken.transfer(msg.sender, amount_);
+        blumaToken.transfer(msg.sender, amount_);
     }
+
+
+        /**
+     * @notice Mints NFTs for all attendees of a specific event.
+     * @param _eventId The ID of the event.
+     * @dev This function can only be called after the registration period has ended and if the NFTs haven't been minted yet.
+     * Emits a `AttendeesNFTMinted` event for each minted NFT.
+     */
+    function mintNFTsForAttendees(uint32 _eventId) external {
+        Event storage _event = events[_eventId];
+        if(_event.eventId == 0) revert INVALID_EVENT_ID();
+        if(currentTime() < _event.regEndTime) revert REGISTRATION_NOT_CLOSED();
+        if(_event.hasMinted) revert  NFT_ALREADY_MINTED();
+
+        for (uint256 i = 0; i < tickets.length; i++) {
+            if (tickets[i].eventId == _eventId && tickets[i].owner != address(0)) {
+                uint256 tokenId = blumaNFT.getNextTokenId();
+                blumaNFT.safeMint(tickets[i].owner, _event.nftUrl);
+                emit AttendeesNFTMinted(tickets[i].owner, _eventId, tickets[i].numberOfTicket, tokenId);
+            }
+        }
+
+        _event.hasMinted = true;
+    }
+
+   
+
+
 
 
 
@@ -431,29 +517,29 @@ function updateRegStatus(uint32 _eventId) internal {
     }
 
    /**
- * @dev Get the details of all events.
- * @return events_ The details of all events.
- */
-function getAllEvents() external view returns (Event[] memory) {
-    Event[] memory events_ = new Event[](_totalEventsId);
-
-    uint32 counter = 0;
-    // Iterate over the possible event IDs
-    for (uint32 i = 1; i <= _totalEventsId; i++) {
-        if (events[i].eventId != 0) {    
-            events_[counter] = events[i];
-            counter++;
+    *@notice get function dont consume gas so to make it east to fetch data
+     * @dev Get the details of all events.
+     * @return events_ The details of all events.
+     */
+    function getAllEvents() external view returns (Event[] memory) {
+        Event[] memory events_ = new Event[](_totalEventsId);
+        uint32 counter = 0;
+        // Iterate over the possible event IDs
+        for (uint32 i = 1; i <= _totalEventsId; i++) {
+            if (events[i].eventId != 0) {    
+                events_[counter] = events[i];
+                counter++;
+            }
         }
+        // Create a new array with the exact size of existing events
+        Event[] memory allEvents = new Event[](counter);
+        // Copy the events to the new array
+        for (uint32 j = 0; j < counter; j++) {
+            allEvents[j] = events_[j];
+        }
+        
+        return allEvents;
     }
-    // Create a new array with the exact size of existing events
-    Event[] memory allEvents = new Event[](counter);
-    // Copy the events to the new array
-    for (uint32 j = 0; j < counter; j++) {
-        allEvents[j] = events_[j];
-    }
-    
-    return allEvents;
-}
 
 
     /**
@@ -465,6 +551,45 @@ function getAllEvents() external view returns (Event[] memory) {
         _validateId(_eventId);
         events_ = events[_eventId];
     }
+
+
+        /**
+     * @notice Retrieves all NFT token IDs minted for a specific event.
+     *@notice get function dont consume gas so to make it east to fetch data
+     * @param _eventId The ID of the event.
+     * @return An array of NFT token IDs.
+     */
+    function getEventNFTs(uint32 _eventId) external view returns (uint256[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < tickets.length; i++) {
+            if (tickets[i].eventId == _eventId) {
+                count++;
+            }
+        }
+
+        uint256[] memory result = new uint256[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < tickets.length; i++) {
+            if (tickets[i].eventId == _eventId) {
+                uint256[] memory userTokens = blumaNFT.tokensOfOwner(tickets[i].owner);
+                for (uint256 j = 0; j < userTokens.length; j++) {
+                    result[index] = userTokens[j];
+                    index++;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @notice Retrieves all NFT token IDs owned by a specific user.
+     * @param _user The address of the user.
+     * @return An array of NFT token IDs owned by the user.
+     */
+    function getUserNFTs_(address _user) external view returns (uint256[] memory) {
+        return blumaNFT.tokensOfOwner(_user);
+    }
+
 
     /**
      * @dev Get the members of a specific event group.
@@ -493,6 +618,7 @@ function getAllEvents() external view returns (Event[] memory) {
         _tickets = tickets;
     }
 
+
     function getTicket(address _addr) external view returns(Ticket memory _ticket){
         _ticket = ticket[_addr];
     }
@@ -513,6 +639,10 @@ function getAllEvents() external view returns (Event[] memory) {
 
     function getAllUser() external view returns (User [] memory) {
         return usersList;
+    }
+
+    function hasPurchasedTicket(address _user, uint32 _eventId) external view returns(bool){
+        return hasPurchasedEvent[_user][_eventId];
     }
 
     /**
@@ -542,7 +672,7 @@ function getAllEvents() external view returns (Event[] memory) {
      * @return bal_ The contract balance.
      */
     function checkContractBalance() external view returns (uint256 bal_) {
-        bal_ = MTRtoken.balanceOf(address(this));
+        bal_ = blumaToken.balanceOf(address(this));
     }
 
 
@@ -561,10 +691,11 @@ function getAllEvents() external view returns (Event[] memory) {
      * @dev Initialize the contract with the initial owner.
      * @param initialOwner The address of the initial owner.
      */
-    function initialize(address initialOwner) public initializer {
+    function initialize(address initialOwner, address _blumaToken, address _blumaNFT) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        MTRtoken = IERC20(0x4cb6cEf87d8cADf966B455E8BD58ffF32aBA49D1);
+        blumaToken = IERC20s(_blumaToken);
+        blumaNFT = IERC721s(_blumaNFT);
     }
 
     /**

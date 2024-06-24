@@ -1,8 +1,14 @@
 ## Foundry
 
+## BLUMA TOKEN : 0x0F3D0d9EFC475C71F734C1b0583568F06989F7D4
+## BLUMA NFT : 0x9fBBA19D265f852b8e2e292f89Bb3C8c33505213
+
 ## Deployer: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-## Deployed to: 0x95E984642BB5243d07d78fAAe482A954468e2762
-## Transaction hash: 0xec5e5d4dda2cb335ff468c11fb33ac76c861c6be911dbd90b82213d6a8fe9722
+## Deployed to: 0x398e13451b28d8b87Dccd7c70D2a7B391A758023
+## Transaction hash: 0xb58647ac24318e3c1e364cc2fd1d172e5246839feae970a796c02d67ba0720ef
+Deployer: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
+Deployed to: 
+Transaction hash: 
 ## RPC: https://rpctest.meter.io
 ## https://docs.meter.io/developer-documentation/introduction#testnet
 ## ChainID: 83

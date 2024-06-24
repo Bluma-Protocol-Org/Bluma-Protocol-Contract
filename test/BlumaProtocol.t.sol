@@ -4,13 +4,16 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {BlumaProtocol} from "../src/BlumaProtocol.sol";
 import {BlumaToken} from "../src/BlumaToken.sol";
-import {IERC20} from "../src/interface/IERC20.sol";
+import "../src/Library/Error.sol";
+import {BlumaNFT} from "../src/BlumaNfts.sol";
+// import {IERC20} from "../src/interface/IERC20.sol";
 // import {IBlumaProtocol} from "../test/IBlumaProtocol.sol";
 
 contract BlumaProtocolTest is Test {
 
     BlumaProtocol blumaProtocol;
     BlumaToken blumaToken;
+    BlumaNFT blumaNft;
     address owner = address(0xa);
     address B = address(0xb);
     address C = address(0xc);
@@ -26,7 +29,8 @@ contract BlumaProtocolTest is Test {
 
         blumaProtocol = new BlumaProtocol();
         blumaToken = new BlumaToken();
-        blumaProtocol.initialize(owner);
+        blumaNft = new BlumaNFT();
+        blumaProtocol.initialize(owner, address(blumaToken), address(blumaNft));
         // IERC20(address(blumaToken)).transfer(B, 200000000);
     }
 
@@ -55,6 +59,7 @@ contract BlumaProtocolTest is Test {
         uint256 _eventEndTime = _currentTime + 9 days;   // Event ends in 9 days
         uint96 _ticketPrice = 100; // Example ticket price
         bool _eventStatus = true;
+        string memory _nftUrl = "pinata_ape_monkeys";
 
 
         // Create the event
@@ -69,7 +74,8 @@ contract BlumaProtocolTest is Test {
             _eventStartTime,
             _eventEndTime,
             _ticketPrice,
-            _eventStatus
+            _eventStatus,
+            _nftUrl
         );
 
         uint256 eventCount_ =  blumaProtocol.getAllEvents().length;
@@ -163,6 +169,7 @@ contract BlumaProtocolTest is Test {
         uint256 _eventEndTime = _currentTime + 9 days;   // Event ends in 9 days
         uint96 _ticketPrice = 100; // Example ticket price
         bool _eventStatus = true;
+        string memory _nftUrl = "pinata_ape_monkeys";
 
 
         // Create the event
@@ -177,9 +184,52 @@ contract BlumaProtocolTest is Test {
             _eventStartTime,
             _eventEndTime,
             _ticketPrice,
-            _eventStatus
+            _eventStatus,
+            _nftUrl
         );
 
+    }
+
+    function testPurchaseTicket() external {
+        testCreateEvent();
+        switchSigner(B);
+        blumaToken.mint( B, 2000);
+        blumaToken.approval(address(blumaProtocol), 2000);
+        blumaProtocol.purchaseTicket(1, 5);
+        uint ticketCount = blumaProtocol.getAllTickets().length;
+        assertEq(ticketCount, 1);
+    }
+
+    function testUserCannotMintAboveTheBaseFee() external{
+          testCreateEvent();
+        switchSigner(B);
+           vm.expectRevert(
+            abi.encodeWithSelector(ExceedTotalAmountMinted.selector)
+        );
+        blumaToken.mint( B, 20000000);
+    }
+
+    function testTwoUserCanPurchaseTicket() external{
+         testCreateEvent();
+        switchSigner(B);
+        blumaToken.mint( B, 2000);
+        blumaToken.approval(address(blumaProtocol), 2000);
+        blumaProtocol.purchaseTicket(1, 5);
+        uint ticketCount = blumaProtocol.getAllTickets().length;
+        assertEq(ticketCount, 1);
+
+        switchSigner(C);
+        blumaToken.mint( C, 2000);
+        blumaToken.approval(address(blumaProtocol), 2000);
+        blumaProtocol.purchaseTicket(1, 1);
+        uint ticketCount2 = blumaProtocol.getAllTickets().length;
+        assertEq(ticketCount2, 2);
+
+    }
+
+    function testNftWasMintedToCreatorOfEvent() public {
+        testCreateEvent();
+        assertEq(blumaNft.balanceOf(owner), 1);
     }
 
      function currentTime() internal view returns (uint256) {
