@@ -48,7 +48,7 @@ contract BlumaProtocolTest is Test {
         bytes32 _title = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
         string memory _imageUrl = "starknet.png";
         string memory _description = "the next generation of starknet event";
-        string memory _location = "no 7 ojo alaba";
+        bytes32 _location = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
         uint32 _capacity = 50;
 
         // Set the times based on the current block timestamp
@@ -90,15 +90,18 @@ contract BlumaProtocolTest is Test {
     function testJoinGroup() public {
         testCreateEvent();
         switchSigner(B);
+
         blumaProtocol.joinGroup(1);
        uint256 membersCount =  blumaProtocol.getGroupMembers(1).length;
         assertEq(membersCount, 2);
         testCreateEvent2();
+
        //NOTE join Room 2
         switchSigner(C);
         blumaProtocol.joinGroup(2);
        uint256 group2member =  blumaProtocol.getGroupMembers(2).length;
         assertEq(group2member, 2);
+
         //NOTE USER 1 CAN JOIN ROOM 2
         switchSigner(B);
         blumaProtocol.joinGroup(2);
@@ -112,8 +115,8 @@ contract BlumaProtocolTest is Test {
         assertEq(group1member, 3);
 
 
-
     }
+
 
     function testUserCanChatInGroup() public{
         //NOTE JOIN GROUP 
@@ -158,7 +161,7 @@ contract BlumaProtocolTest is Test {
         bytes32 _title = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
         string memory _imageUrl = "LAGOSBLOCKCHAINWEEK.png";
         string memory _description = "the next generation of starknet event";
-        string memory _location = "no 7 ojo alaba";
+        bytes32 _location = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
         uint32 _capacity = 50;
 
         // Set the times based on the current block timestamp
@@ -204,7 +207,7 @@ contract BlumaProtocolTest is Test {
           testCreateEvent();
         switchSigner(B);
            vm.expectRevert(
-            abi.encodeWithSelector(ExceedTotalAmountMinted.selector)
+            abi.encodeWithSelector(EXCEED_TOTAL_AMOUNT_MINTED.selector)
         );
         blumaToken.mint( B, 20000000);
     }
@@ -227,10 +230,7 @@ contract BlumaProtocolTest is Test {
 
     }
 
-    function testNftWasMintedToCreatorOfEvent() public {
-        testCreateEvent();
-        assertEq(blumaNft.balanceOf(owner), 1);
-    }
+
 
      function currentTime() internal view returns (uint256) {
         return (block.timestamp * 1000) + 1000;

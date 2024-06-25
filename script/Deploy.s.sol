@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.9;
 
 import {Script, console} from "forge-std/Script.sol";
 import {BlumaProtocol} from "../src/BlumaProtocol.sol";
@@ -17,8 +17,8 @@ contract DeployScript is Script {
 
     function run() public {
 
-        address blumaToken = 0x0F3D0d9EFC475C71F734C1b0583568F06989F7D4;
-        address blumaNft = 0x9fBBA19D265f852b8e2e292f89Bb3C8c33505213;
+        address blumaToken = 0x849176B3cE99C6eac972d58268b760207b29dCb6;
+        address blumaNft = 0x08be7d6322c193b9cE89965515E504E6c8E7Dac0;
 
         vm.startBroadcast();
 
@@ -46,3 +46,4 @@ contract DeployScript is Script {
         vm.stopBroadcast();
     }
 }
+// forge create --rpc-url https://rpctest.meter.io  --private-key ef257f59dc15ea8d0cfa7f5a177fb173b3125a3d79e6c13eb1e88831e40dc62c src/BlumaToken.sol:BlumaToken

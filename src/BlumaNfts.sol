@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol"; // Import IERC721 to ensure it is recognized
@@ -11,9 +11,9 @@ contract BlumaNFT is ERC721URIStorage {
     constructor() ERC721("BlumaNFT", "BLUMA") {}
 
     function safeMint(address to, string memory uri) public {
-        uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
+        _nextTokenId = _nextTokenId + 1;
+        _safeMint(to, _nextTokenId);
+        _setTokenURI(_nextTokenId, uri);
     }
 
     function getNextTokenId() external view returns (uint256) {

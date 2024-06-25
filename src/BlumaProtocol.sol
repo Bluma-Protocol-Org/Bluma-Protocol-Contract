@@ -124,7 +124,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint32 eventId;
         bytes32 title;
         string imageUrl;
-        string location;
+        bytes32 location;
         string description;
         address creator;
         uint32 seats;
@@ -134,6 +134,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         RegStatus regStatus;
         EventStatus eventStatus;
         EventType eventType;
+        EventGroup groups;
         string nftUrl;
         uint256 eventStartTime;
         uint256 eventEndTime;
@@ -213,7 +214,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         bytes32 _title,
         string calldata _imageUrl,
         string calldata _description,
-        string calldata _location,
+        bytes32  _location,
         uint32 _capacity,
         uint256 _regStartTime,
         uint256 _regEndTime,
@@ -229,7 +230,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         Validator._validateString(_description);
         Validator._validateString(_nftUrl);
         Validator._validateString(_imageUrl);
-        Validator._validateString(_location);
+        Validator._validateBytes32(_location);
         Validator._validateNumbers(_regStartTime);
         Validator._validateNumbers(_regEndTime);
         Validator._validateNumbers(_eventStartTime);
@@ -272,41 +273,24 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _event.createdAt = currentTime();
         _event.nftUrl = _nftUrl;
 
-        //mint nfts to the event creator
-        IERC721s(blumaNFT).safeMint(msg.sender, _nftUrl);
-        
-        _createGroup(_event.eventId);
+        // Initialize EventGroup for the event
+        EventGroup storage _eventGroup = _event.groups;
+        _eventGroup.eventId = _totalEventsId;
+        _eventGroup.title = _title;
+        _eventGroup.imageUrl = _imageUrl;
 
-        emit EventCreated(_totalEventsId, _event.seats, _capacity);
-    }
-
-    /**
-     * @dev Create a group for the event.
-     * @param _eventId The ID of the event.
-     */
-    function _createGroup(uint32 _eventId) internal {
-        _validateId(_eventId);
-        
-    if (rooms[_eventId].eventId != 0) revert GROUP_ALREADY_EXISTS();
-        Event storage _event = events[_eventId];
-        
-
-        EventGroup storage _eventRoom = rooms[_eventId];
-        _eventRoom.eventId = _eventId;
-        _eventRoom.title = _event.title;
-        _eventRoom.imageUrl = _event.imageUrl;
-        _eventRoom.description = _event.description;
-
-          _eventRoom.members.push(Member({
+        // Add creator to members
+        _eventGroup.members.push(Member({
             user: _event.creator,
             joinTime: currentTime()
         }));
-           hasJoinedGroup[_event.creator][_eventId] = true;
 
-        roomList.push(_eventRoom);
-        emit GroupCreated(_eventId, _event.imageUrl, _event.title);
+        roomList.push(_eventGroup);
+        //mint nfts to the event creator
+        IERC721s(blumaNFT).safeMint(msg.sender, _nftUrl);
+        
+        emit EventCreated(_totalEventsId, _event.seats, _capacity);
     }
-
 
     /**
      * @dev Join an event group.
@@ -314,14 +298,17 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      */
     function joinGroup(uint32 _eventId) external {
         _validateId(_eventId);
-        EventGroup storage _eventRoom = rooms[_eventId];
-        if(_eventRoom.eventId == 0) revert INVALID_ID();
+        Event storage _eventGroup = events[_eventId];
+        if(_eventGroup.eventId == 0) revert INVALID_ID();
+
         if(hasJoinedGroup[msg.sender][_eventId]) revert ALREADY_A_MEMBER();
 
-          _eventRoom.members.push(Member({
+           // Add creator to members
+        _eventGroup.groups.members.push(Member({
             user: msg.sender,
             joinTime: currentTime()
         }));
+
         hasJoinedGroup[msg.sender][_eventId] = true;
 
         emit GroupJoinedSuccessfully(msg.sender, _eventId, currentTime());
@@ -365,15 +352,19 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
 
 
-    function groupChat(uint32 _groupId, string calldata _text) external {
-        _validateId(_groupId);
+    function groupChat(uint32 _eventId, string calldata _text) external {
+        _validateId(_eventId);
         Validator._validateString(_text);
 
         // Ensure the sender is a member of the group
-        EventGroup storage _group = rooms[_groupId];
-        if(_group.eventId == 0) revert INVALID_ID();
+        Event storage _event = events[_eventId];
+        if(_event.eventId == 0) revert INVALID_ID();
 
-        if(!hasJoinedGroup[msg.sender][_groupId]) revert INVALID_NOT_AUTHORIZED();
+         if(_event.creator == msg.sender){
+            hasJoinedGroup[msg.sender][_eventId] = true;
+         }
+
+        if(!hasJoinedGroup[msg.sender][_eventId]) revert INVALID_NOT_AUTHORIZED();
 
         // Add the message to the group's message list
         Message memory _message;
@@ -381,9 +372,9 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _message.sender = msg.sender;
         _message.text = _text;
         _message.timestamp = currentTime();
-        _group.messages.push(_message);
+        _event.groups.messages.push(_message);
 
-        emit MessageSent(msg.sender, _groupId, _text, _message.timestamp);
+        emit MessageSent(msg.sender, _eventId, _text, _message.timestamp);
     }
 
     /**
@@ -591,22 +582,21 @@ function updateRegStatus(uint32 _eventId) internal {
     }
 
 
-    /**
-     * @dev Get the members of a specific event group.
-     * @param _eventId The ID of the event.
-     * @return _members The members of the event group.
-     */
-    function getGroupMembers(uint32 _eventId) external view returns (Member [] memory _members) {
+    function getGroupMembers(uint32 _eventId) external view returns (Member[] memory) {
         _validateId(_eventId);
-        _members = rooms[_eventId].members;
+        Event storage _event = events[_eventId];
+        if (_event.eventId == 0) revert GROUP_ALREADY_EXISTS();
+        return _event.groups.members;
     }
 
-    function getAllEventGroups() external view returns(EventGroup [] memory group_){
-        group_ = roomList;
+    function getAllEventGroups() external view returns (EventGroup[] memory) {
+        return roomList;
     }
 
-    function getEventGroup(uint32 _groupId) external view returns(EventGroup memory group_){
-        group_ = rooms[_groupId];
+    function getEventGroup(uint32 _eventId) external view returns (EventGroup memory) {
+        Event storage _event = events[_eventId];
+        if (_event.eventId == 0) revert GROUP_ALREADY_EXISTS();
+        return _event.groups;
     }
 
 
@@ -623,9 +613,10 @@ function updateRegStatus(uint32 _eventId) internal {
         _ticket = ticket[_addr];
     }
 
-    function getAllGroupMessages(uint32 _groupId) external view returns (Message[] memory) {
-        _validateId(_groupId);
-        return rooms[_groupId].messages;
+    function getAllGroupMessages(uint32 _eventId) external view returns (Message[] memory) {
+         Event storage _event = events[_eventId];
+        if (_event.eventId == 0) revert GROUP_ALREADY_EXISTS();
+        return _event.groups.messages;
     }
 
     function getGroupMember(uint32 _groupId, uint _index) external view returns (Member memory) {
