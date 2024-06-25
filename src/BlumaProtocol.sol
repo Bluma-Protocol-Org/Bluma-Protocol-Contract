@@ -48,6 +48,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev First mapping is user address, second mapping is event group ID, value is boolean
     mapping(address user => mapping(uint32 => bool _groupId)) hasJoinedGroup;
 
+    mapping(uint32 => NFT) private nfts;
+
     /// @notice List of all events
     Event[] private eventList;
 
@@ -131,10 +133,10 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint32 capacity;
         uint256 regStartTime;
         uint256 regEndTime;
+        EventGroup groups;
         RegStatus regStatus;
         EventStatus eventStatus;
         EventType eventType;
-        EventGroup groups;
         string nftUrl;
         uint256 eventStartTime;
         uint256 eventEndTime;
@@ -142,7 +144,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 totalSales;
         uint256 createdAt;
         bool isCreatorPaid;
-        bool creatorHasJoin;
         bool hasMinted;
     }
 
@@ -174,6 +175,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         string email;
         string text;
         uint256 timestamp;
+    }
+
+    struct NFT{
+        uint32 eventId;
+        string title;
+        address owner;
+        string nftUrl;
     }
 
     //////////////////
@@ -226,13 +234,14 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         bool _isEventPaid,
         string calldata _nftUrl
     ) external {
-        require(bytes(_title).length >= 1, "EMPTY_INPUT_FIELD: title");
-        require(bytes(_imageUrl).length >= 1, "EMPTY_INPUT_FIELD: imageUrl");
-        require(bytes(_description).length >= 1, "EMPTY_INPUT_FIELD: description");
-        require(bytes(_location).length >= 1, "EMPTY_INPUT_FIELD: location");
-        require(_regStartTime < _regEndTime, "INVALID_TIME_SET: registration time");
-        require(_eventStartTime < _eventEndTime, "INVALID_TIME_SET: event time");
-
+        if(bytes(_title).length < 1) revert EMPTY_INPUT_FIELD();
+        if(bytes(_imageUrl).length < 1)  revert EMPTY_INPUT_FIELD();
+        if(bytes(_description).length < 1) revert EMPTY_INPUT_FIELD();
+        if(bytes(_location).length < 1) revert EMPTY_INPUT_FIELD();
+        if(_regStartTime > _regEndTime) revert EMPTY_INPUT_FIELD();
+        if(_eventStartTime > _eventEndTime) revert EMPTY_INPUT_FIELD();
+        if(bytes(_nftUrl).length < 1) revert EMPTY_INPUT_FIELD();
+    
         _totalEventsId = _totalEventsId + 1;
 
         Event memory _event;
@@ -241,7 +250,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         } else {
             _event.regStatus = RegStatus.OPEN;
         }
-
         if (_isEventPaid) {
             _event.eventType = EventType.PAID;
             _event.ticketPrice = _ticketPrice;
@@ -267,18 +275,28 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
         events[_totalEventsId] = _event;
 
-        // Mint NFTs to the event creator
-        IERC721s(blumaNFT).safeMint(msg.sender, _nftUrl);
-
         emit EventCreated(_totalEventsId, _event.seats, _capacity);
     }
 
+
+    function mintNft(uint32 _eventId) external {
+        // Mint NFTs to the event creator
+        Event storage _event = events[_eventId];
+        if (_event.eventId == 0) revert INVALID_ID();
+        if(_event.creator != msg.sender) revert INVALID_NOT_AUTHORIZED();
+        NFT storage _nft = nfts[_eventId];
+        _nft.eventId = _event.eventId;
+        _nft.owner = msg.sender;
+        _nft.title = _event.title;
+        _nft.nftUrl = _event.nftUrl;
+        IERC721s(blumaNFT).safeMint(msg.sender, _event.nftUrl);
+    }
 
     
 
     function createGroup(uint32 _eventId) external {
         Event storage _event = events[_eventId];
-        if (_event.eventId == 0) revert GROUP_ALREADY_EXISTS();
+        if (_event.eventId == 0) revert INVALID_ID();
         if(_event.creator != msg.sender) revert INVALID_NOT_AUTHORIZED();
          // Initialize EventGroup for the event
         EventGroup storage _eventGroup = _event.groups;
@@ -286,7 +304,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _eventGroup.title = _event.title;
         _eventGroup.imageUrl = _event.imageUrl;
         _eventGroup.description = _event.description;
-        _event.creatorHasJoin = true;
+       
         // Add creator to members
         _eventGroup.members.push(Member({
             user: _event.creator,
@@ -305,8 +323,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _validateId(_eventId);
         Event storage _eventGroup = events[_eventId];
         if(_eventGroup.eventId == 0) revert INVALID_ID();
-        if(_eventGroup.creatorHasJoin) revert  ALREADY_A_MEMBER();
-
         if(hasJoinedGroup[msg.sender][_eventId]) revert ALREADY_A_MEMBER();
 
            // Add creator to members

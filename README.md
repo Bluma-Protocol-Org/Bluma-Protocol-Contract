@@ -1,19 +1,19 @@
-## Foundry
+## NEW BLUMA DEPLOYMENT
 
 ## BLUMA TOKEN 
 **Deployer: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee**
-**Deployed to: 0x100cA68535e9f7ed9E665378df4914Fa9f81298c**
-**Transaction hash: 0xee09f09fbadad64a2639f8a2959960597a6ae10e7f1d26f6f173275779c1ade2**
+**Deployed to: 0xaC6B502Cb08F6dA51Ac99F00Aa6938C1BE12A2f9**
+**Transaction hash: 0xc6101f288cbb91051e9aad9da9d2915129184791f5905abda459922cd8bbf3cf**
 
 ## BLUMA NFT 
 **Deployer: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee**
-**Deployed to: 0x52A341CD2BcCa262BF99CAA96db3347DE0d8a45D**
-**Transaction hash: 0xe79793c99e1a4c8914f3dd45ab1a7e9c77abe6117b80b5a5cc8bada9ac5294f9**
+**Deployed to: 0x844B5da40a1A9D6b1a106148dC296AD253D5D38F**
+**Transaction hash: 0x464ee8c846d42784904d71864d4fc5dfcca5babc901c60cfb583b83a154a754c**
 
 ## BLUMA PROTOCOL
 **Deployer: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee**
-**Deployed to: 0xF6FB09A796530F7E0Ba8c7289f27b5b5ed799A4b**
-**Transaction hash: 0x7e00769473acb0472d59bf2b00f516d99738de69faebdd96b2d3b95bb0a86893**
+**Deployed to: 0x46426599B6d67Ff406C8c5B81c71A84d6CDf5E17**
+**Transaction hash: 0x934b933277ed04af2cc9772702d5f843fc3327a29220631626feefcd50f3d0cb**
 
 ## RPC: https://rpctest.meter.io
 ## https://docs.meter.io/developer-documentation/introduction#testnet
