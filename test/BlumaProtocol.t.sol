@@ -45,10 +45,10 @@ contract BlumaProtocolTest is Test {
     function testCreateEvent() public{
         testCreateAccount();
         switchSigner(owner);
-        bytes32 _title = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
+        string memory _title = "MY STARKNET CLASS";
         string memory _imageUrl = "starknet.png";
         string memory _description = "the next generation of starknet event";
-        bytes32 _location = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
+        string memory _location = "no 7 tarjudeen";
         uint32 _capacity = 50;
 
         // Set the times based on the current block timestamp
@@ -84,7 +84,7 @@ contract BlumaProtocolTest is Test {
 
         //note check group is created
         uint256 groupCount_ = blumaProtocol.getAllEventGroups().length;
-        assertEq(groupCount_ , 1);
+        assertEq(groupCount_ , 0);
     }
 
     function testJoinGroup() public {
@@ -93,26 +93,26 @@ contract BlumaProtocolTest is Test {
 
         blumaProtocol.joinGroup(1);
        uint256 membersCount =  blumaProtocol.getGroupMembers(1).length;
-        assertEq(membersCount, 2);
+        assertEq(membersCount, 1);
         testCreateEvent2();
 
        //NOTE join Room 2
         switchSigner(C);
         blumaProtocol.joinGroup(2);
        uint256 group2member =  blumaProtocol.getGroupMembers(2).length;
-        assertEq(group2member, 2);
+        assertEq(group2member, 1);
 
         //NOTE USER 1 CAN JOIN ROOM 2
         switchSigner(B);
         blumaProtocol.joinGroup(2);
        uint256 group3member =  blumaProtocol.getGroupMembers(2).length;
-        assertEq(group3member, 3);
+        assertEq(group3member, 2);
         
         //NOTE USER C CAN JOIN GROUP1
         switchSigner(C);
         blumaProtocol.joinGroup(1);
        uint256 group1member =  blumaProtocol.getGroupMembers(1).length;
-        assertEq(group1member, 3);
+        assertEq(group1member, 2);
 
 
     }
@@ -131,11 +131,11 @@ contract BlumaProtocolTest is Test {
         switchSigner(C);
         blumaProtocol.groupChat(1, "LOL bloody ass liar");
         //NOTE OWNER CAN SEND MESSAGE
-        switchSigner(owner);
-        blumaProtocol.groupChat(1, "I will this group");
+        // switchSigner(owner);
+        // blumaProtocol.groupChat(1, "I will this group");
 
         uint256 groupMessageCount = blumaProtocol.getAllGroupMessages(1).length;
-        assertEq(groupMessageCount, 3);
+        assertEq(groupMessageCount, 2);
 
         //NOTE CHAT IN GROUP TWO 
 
@@ -147,21 +147,21 @@ contract BlumaProtocolTest is Test {
         switchSigner(C);
         blumaProtocol.groupChat(2, "i am going to look for love");
         //NOTE OWNER CAN SEND MESSAGE
-        switchSigner(owner);
-        blumaProtocol.groupChat(2, "I am available");
+        // switchSigner(owner);
+        // blumaProtocol.groupChat(2, "I am available");
 
         uint256 group2MessageCount = blumaProtocol.getAllGroupMessages(2).length;
-        assertEq(group2MessageCount, 3);
+        assertEq(group2MessageCount, 2);
 
     }
 
     function testCreateEvent2() public {
           testCreateAccount();
         switchSigner(owner);
-        bytes32 _title = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
+        string memory _title = "MY STARKNET CLASS";
         string memory _imageUrl = "LAGOSBLOCKCHAINWEEK.png";
         string memory _description = "the next generation of starknet event";
-        bytes32 _location = 0x692077616e7420746f2062652067726561740000000000000000000000000000;
+        string memory _location = "no 7 tarjudeen";
         uint32 _capacity = 50;
 
         // Set the times based on the current block timestamp
@@ -209,7 +209,7 @@ contract BlumaProtocolTest is Test {
            vm.expectRevert(
             abi.encodeWithSelector(EXCEED_TOTAL_AMOUNT_MINTED.selector)
         );
-        blumaToken.mint( B, 20000000);
+        blumaToken.mint( B, 20 ether);
     }
 
     function testTwoUserCanPurchaseTicket() external{
