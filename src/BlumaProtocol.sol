@@ -218,7 +218,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _eventEndTime The event end time.
      * @param _ticketPrice The price of a ticket.
      * @param _isEventPaid The event status if free/paid.
-     * @param _nftUrl The NFT CID for the event.
      */
     function createEvent(
         string memory _title,
@@ -231,8 +230,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 _eventStartTime,
         uint256 _eventEndTime,
         uint96 _ticketPrice,
-        bool _isEventPaid,
-        string calldata _nftUrl
+        bool _isEventPaid
     ) external {
         if(bytes(_title).length < 1) revert EMPTY_INPUT_FIELD();
         if(bytes(_imageUrl).length < 1)  revert EMPTY_INPUT_FIELD();
@@ -240,7 +238,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         if(bytes(_location).length < 1) revert EMPTY_INPUT_FIELD();
         if(_regStartTime > _regEndTime) revert EMPTY_INPUT_FIELD();
         if(_eventStartTime > _eventEndTime) revert EMPTY_INPUT_FIELD();
-        if(bytes(_nftUrl).length < 1) revert EMPTY_INPUT_FIELD();
     
         _totalEventsId = _totalEventsId + 1;
 
@@ -271,7 +268,6 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _event.eventEndTime = _eventEndTime;
         _event.eventStatus = EventStatus.PENDING;
         _event.createdAt = currentTime();
-        _event.nftUrl = _nftUrl;
 
         events[_totalEventsId] = _event;
 
@@ -279,7 +275,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
 
-    function mintNft(uint32 _eventId) external {
+    function mintNft(uint32 _eventId, string calldata _nftUrl) external {
+        if(bytes(_nftUrl).length < 1) revert EMPTY_INPUT_FIELD();
         // Mint NFTs to the event creator
         Event storage _event = events[_eventId];
         if (_event.eventId == 0) revert INVALID_ID();
@@ -288,8 +285,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _nft.eventId = _event.eventId;
         _nft.owner = msg.sender;
         _nft.title = _event.title;
-        _nft.nftUrl = _event.nftUrl;
-        IERC721s(blumaNFT).safeMint(msg.sender, _event.nftUrl);
+        _nft.nftUrl = _nftUrl;
+        IERC721s(blumaNFT).safeMint(msg.sender, _nftUrl);
     }
 
     

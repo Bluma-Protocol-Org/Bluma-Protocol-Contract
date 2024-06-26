@@ -12,8 +12,8 @@
 
 ## BLUMA PROTOCOL
 **Deployer: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee**
-**Deployed to: 0x46426599B6d67Ff406C8c5B81c71A84d6CDf5E17**
-**Transaction hash: 0x934b933277ed04af2cc9772702d5f843fc3327a29220631626feefcd50f3d0cb**
+**Deployed to: 0x07b24f284C91Aaade9e4e5A126f57faF47AD5dCE**
+**Transaction hash: 0x0d77c4edf3be5a94004ebdc7ccf16b54766fc60717b421d5633e185dd499d683**
 
 ## RPC: https://rpctest.meter.io
 ## https://docs.meter.io/developer-documentation/introduction#testnet

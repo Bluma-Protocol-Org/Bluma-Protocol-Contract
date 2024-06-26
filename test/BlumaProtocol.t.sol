@@ -59,7 +59,7 @@ contract BlumaProtocolTest is Test {
         uint256 _eventEndTime = _currentTime + 9 days;   // Event ends in 9 days
         uint96 _ticketPrice = 100; // Example ticket price
         bool _eventStatus = true;
-        string memory _nftUrl = "pinata_ape_monkeys";
+        // string memory _nftUrl = "pinata_ape_monkeys";
 
 
         // Create the event
@@ -74,8 +74,8 @@ contract BlumaProtocolTest is Test {
             _eventStartTime,
             _eventEndTime,
             _ticketPrice,
-            _eventStatus,
-            _nftUrl
+            _eventStatus
+            
         );
 
         uint256 eventCount_ =  blumaProtocol.getAllEvents().length;
@@ -172,7 +172,7 @@ contract BlumaProtocolTest is Test {
         uint256 _eventEndTime = _currentTime + 9 days;   // Event ends in 9 days
         uint96 _ticketPrice = 100; // Example ticket price
         bool _eventStatus = true;
-        string memory _nftUrl = "pinata_ape_monkeys";
+        // string memory _nftUrl = "pinata_ape_monkeys";
 
 
         // Create the event
@@ -187,8 +187,8 @@ contract BlumaProtocolTest is Test {
             _eventStartTime,
             _eventEndTime,
             _ticketPrice,
-            _eventStatus,
-            _nftUrl
+            _eventStatus
+            // _nftUrl
         );
 
     }
