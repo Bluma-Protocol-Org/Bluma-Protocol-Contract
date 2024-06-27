@@ -1,7 +1,7 @@
 
 # Bluma: The Future of Event Socialization and Networking
 
-![Bluma Logo](src/image/WhatsApp%20Image%202024-06-26%20at%2012.42.36%20AM.jpeg)
+<img src="src/image/WhatsApp%20Image%202024-06-26%20at%2012.42.36%20AM.jpeg" alt="Bluma Logo" />
 
 
 ## Introduction
