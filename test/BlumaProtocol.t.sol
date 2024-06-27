@@ -113,8 +113,6 @@ contract BlumaProtocolTest is Test {
         blumaProtocol.joinGroup(1);
        uint256 group1member =  blumaProtocol.getGroupMembers(1).length;
         assertEq(group1member, 2);
-
-
     }
 
 
@@ -197,7 +195,7 @@ contract BlumaProtocolTest is Test {
         testCreateEvent();
         switchSigner(B);
         blumaToken.mint( B, 2000);
-        blumaToken.approval(address(blumaProtocol), 2000);
+        blumaToken.approve(address(blumaProtocol), 2000);
         blumaProtocol.purchaseTicket(1, 5);
         uint ticketCount = blumaProtocol.getAllTickets().length;
         assertEq(ticketCount, 1);
@@ -207,29 +205,67 @@ contract BlumaProtocolTest is Test {
           testCreateEvent();
         switchSigner(B);
            vm.expectRevert(
-            abi.encodeWithSelector(EXCEED_TOTAL_AMOUNT_MINTED.selector)
+            abi.encodeWithSelector(USER_ALREADY_EXCEED_LIMIT.selector)
         );
         blumaToken.mint( B, 20 ether);
     }
 
-    function testTwoUserCanPurchaseTicket() external{
+    function testTwoUserCanPurchaseTicket() public{
          testCreateEvent();
         switchSigner(B);
         blumaToken.mint( B, 2000);
-        blumaToken.approval(address(blumaProtocol), 2000);
+        blumaToken.approve(address(blumaProtocol), 2000);
         blumaProtocol.purchaseTicket(1, 5);
         uint ticketCount = blumaProtocol.getAllTickets().length;
         assertEq(ticketCount, 1);
 
         switchSigner(C);
         blumaToken.mint( C, 2000);
-        blumaToken.approval(address(blumaProtocol), 2000);
+        blumaToken.approve(address(blumaProtocol), 2000);
         blumaProtocol.purchaseTicket(1, 1);
         uint ticketCount2 = blumaProtocol.getAllTickets().length;
         assertEq(ticketCount2, 2);
 
     }
 
+    function testRefundTicketFee()external {
+        testTwoUserCanPurchaseTicket();
+        switchSigner(B);
+
+        uint256 _amountBeforeRefund = blumaToken.balanceOf(B);
+        assertEq(_amountBeforeRefund, 1500);
+        blumaProtocol.refundFee(1);
+
+        uint256 _amountAfterRefund = blumaToken.balanceOf(B);
+        assertEq(_amountAfterRefund, 2000);
+    }
+
+    function testMintNft() external {
+        testCreateEvent();
+        switchSigner(owner);
+        blumaProtocol.mintNft(1, "image url");
+        uint nftNumber =  blumaNft.balanceOf(owner);
+        assertEq(nftNumber, 1);
+
+
+    }
+    function testWithdrawFee() external {
+        testTwoUserCanPurchaseTicket();
+        switchSigner(owner);
+          // Move to the end of the event using Foundry's warp cheat code
+        uint256 endTime = currentTime() + 10 days;
+        vm.warp(endTime);
+        blumaProtocol.withdrawEventFee(1);
+
+        assertTrue(blumaProtocol.getEventById(1).isCreatorPaid);
+        assertEq(blumaProtocol.getEventById(1).totalSales, 0);
+        uint256 _balance = blumaProtocol.checkUserBalance(owner);
+        assertEq(_balance , 600);
+        
+
+
+        
+    }
 
 
      function currentTime() internal view returns (uint256) {

@@ -1,74 +1,129 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol"; // Ensure you have the correct path for Ownable
-import "./Library/Error.sol"; // Ensure this file exists and is correctly implemented
+import "./Library/Error.sol";
 
-contract BlumaToken is ERC20, Ownable {
+contract BlumaToken {
+    string private _name;
+    string private _symbol;
+    uint256 private _totalSupply;
+    address private owner;
 
-    uint256 public constant MAX_TOTAL_SUPPLY = 10000000000 * 10**18; // Adjust for decimals if necessary
-    uint256 public totalMinted; // Tracks the total minted tokens
-    uint256 public constant MINT_AMOUNT = 2000 * 10**18; // Adjust for decimals if necessary
+    uint256 private constant MAX_TOTAL_SUPPLY = 10000000000; // Maximum total supply
+    uint256 private totalMinted; // Tracks the total minted tokens
+    uint256 private constant MINT_AMOUNT = 2000; // Max amount a user can mint
     mapping(address => bool) private _hasMinted;
-    mapping(address => uint256) private _userBalance;
+    mapping(address => uint256) private _balances;
+    mapping(address => mapping(address => uint256)) private _allowances;
 
-    constructor() ERC20("BlumaToken", "BLUM") Ownable(msg.sender) {
-        totalMinted = 0;
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    constructor() {
+        _name = "Bluma Token";
+        _symbol = "BLUM";
+        owner = msg.sender;
+        _totalSupply = MAX_TOTAL_SUPPLY;
+        totalMinted = 0; // Initialize to 0 since tokens are not pre-minted
     }
 
-    event TransferSuccessful(address indexed _user, uint256 indexed _amount);
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert NOT_OWNER();
+        _;
+    }
+
+    function name() external view returns (string memory) {
+        return _name;
+    }
+
+    function symbol() external view returns (string memory) {
+        return _symbol;
+    }
+
+    function decimals() external pure returns (uint8) {
+        return 18;
+    }
+
+    function totalSupply() external view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address _user) external view returns (uint256) {
+        return _balances[_user];
+    }
 
     function mint(address _user, uint256 _amount) public {
-        require(_amount <= MINT_AMOUNT, "Amount exceeds mint limit");
-        require(!_hasMinted[_user], "User already minted maximum amount");
+        if (_hasMinted[_user]) revert USER_ALREADY_EXCEED_LIMIT();
 
-        uint256 _userAmount = _userBalance[_user] + _amount;
+        uint256 _userAmount = _balances[_user] + _amount;
 
         if (_userAmount > MINT_AMOUNT) {
             revert USER_ALREADY_EXCEED_LIMIT();
         }
 
-        if (totalMinted + _userAmount > MAX_TOTAL_SUPPLY) {
-            revert EXCEED_TOTAL_AMOUNT_MINTED();
+        if (totalMinted + _amount > MAX_TOTAL_SUPPLY) {
+            revert EXCEED_TOTAL_SUPPLY_CAP();
         }
 
-        _userBalance[_user] = _userAmount;
-        totalMinted += _userAmount;
-        _mint(_user, _userAmount);
+        _balances[_user] += _amount;
+        totalMinted += _amount;
 
-        if (_userAmount == MINT_AMOUNT) {
+        if (_userAmount >= MINT_AMOUNT) {
             _hasMinted[_user] = true;
         }
 
-        emit TransferSuccessful(_user, _userAmount);
+        emit Transfer(address(0), _user, _amount); // Emit Transfer event from address(0) for minting
     }
 
-    function totalSupplys() external view returns (uint256) {
-        return totalSupply();
+    function transfer(address _to, uint256 _amount) public returns (bool) {
+        if (_amount > _balances[msg.sender]) revert INSUFFICIENT_BALANCE();
+
+        _balances[msg.sender] -= _amount;
+        _balances[_to] += _amount;
+        emit Transfer(msg.sender, _to, _amount);
+        return true;
     }
 
-    function approval(address _spender, uint256 _value) external returns (bool) {
-        return approve(_spender, _value);
+    function approve(address spender, uint256 _value) external returns (bool) {
+        _allowances[msg.sender][spender] = _value;
+        emit Approval(msg.sender, spender, _value);
+        return true;
     }
 
-    function remainingSupply() external view returns (uint256 balance_) {
-        require(totalMinted <= MAX_TOTAL_SUPPLY, "Total minted exceeds max supply");
+    function allowance(address _owner, address _spender) external view returns (uint256) {
+        return _allowances[_owner][_spender];
+    }
+
+    function transferFrom(address _owner, address _recipient, uint256 _amount) external returns (bool) {
+        if (_amount > _balances[_owner]) revert INSUFFICIENT_BALANCE();
+        if (_amount > _allowances[_owner][msg.sender]) revert INSUFFICIENT_ALLOWANCE();
+
+        _allowances[_owner][msg.sender] -= _amount;
+        _balances[_owner] -= _amount;
+        _balances[_recipient] += _amount;
+
+        emit Transfer(_owner, _recipient, _amount);
+        return true;
+    }
+
+    function remainingSupply() external view returns (uint256) {
         return MAX_TOTAL_SUPPLY - totalMinted;
     }
 
     function getUserBalance(address _user) external view returns (uint256) {
-        return _userBalance[_user];
+        return _balances[_user];
     }
 
     function adminMint(address to, uint256 amount) public onlyOwner {
-        uint256 _amount = totalMinted + amount;
-        require(_amount <= MAX_TOTAL_SUPPLY, "Exceeds total supply cap");
+        if (totalMinted + amount > MAX_TOTAL_SUPPLY) revert EXCEED_TOTAL_SUPPLY_CAP();
+
+        _balances[to] += amount;
         totalMinted += amount;
-        _mint(to, amount);
+
+        emit Transfer(address(0), to, amount);
     }
 
-    function hasMinted_(address _user) external view returns (bool) {
+    function hasMinted(address _user) external view returns (bool) {
         return _hasMinted[_user];
     }
 }

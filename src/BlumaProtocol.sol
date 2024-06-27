@@ -48,7 +48,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev First mapping is user address, second mapping is event group ID, value is boolean
     mapping(address user => mapping(uint32 => bool _groupId)) hasJoinedGroup;
 
-    mapping(uint32 => NFT) private nfts;
+    mapping(address => NFT) private nfts;
 
     /// @notice List of all events
     Event[] private eventList;
@@ -75,7 +75,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /////////////
 
     event EventCreated(uint32 indexed _totalEventsId,uint32 indexed _seatNumber,uint32 indexed _capacity);
-    event GroupCreated(uint32 indexed _roomId, string imageUrl, bytes32 _title);
+    event GroupCreated(uint32 indexed _roomId, string imageUrl, string _title);
     event GroupJoinedSuccessfully(address indexed _sender, uint32 indexed _eventId, uint256 indexed _joinedTimw);
     event RegistrationClose(uint256 indexed _currentTime, uint8 indexed _status);
     event TicketPurchased(address indexed buyer, uint32 indexed _eventId, uint32 numberOfTickets);
@@ -83,6 +83,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     event EventClosed(uint32 indexed _eventId, uint256 indexed _currentTime);
     event MessageSent(address indexed sender, uint32 indexed groupId, string text, uint256 timestamp);
     event AttendeesNFTMinted(address indexed owner, uint32 indexed eventId, uint32 numberOfTickets, uint256  indexed tokenId);
+    event NftMintedSuccessful(address indexed sender,string indexed nftUrl, uint32 indexed eventId,string title);
+    
 
 
 
@@ -275,20 +277,21 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
 
-    function mintNft(uint32 _eventId, string calldata _nftUrl) external {
-        if(bytes(_nftUrl).length < 1) revert EMPTY_INPUT_FIELD();
+   function mintNft(uint32 _eventId, string calldata _nftUrl) external {
+        if (bytes(_nftUrl).length < 1) revert EMPTY_INPUT_FIELD();
         // Mint NFTs to the event creator
         Event storage _event = events[_eventId];
         if (_event.eventId == 0) revert INVALID_ID();
-        if(_event.creator != msg.sender) revert INVALID_NOT_AUTHORIZED();
-        NFT storage _nft = nfts[_eventId];
+        if (_event.creator != msg.sender) revert INVALID_NOT_AUTHORIZED();
+        NFT storage _nft = nfts[msg.sender];
         _nft.eventId = _event.eventId;
         _nft.owner = msg.sender;
         _nft.title = _event.title;
         _nft.nftUrl = _nftUrl;
-        IERC721s(blumaNFT).safeMint(msg.sender, _nftUrl);
-    }
 
+        blumaNFT.safeMint(msg.sender, _nftUrl);
+        emit NftMintedSuccessful(msg.sender, _nft.nftUrl, _nft.eventId, _nft.title);
+    }
     
 
     function createGroup(uint32 _eventId) external {
@@ -310,6 +313,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      
 
         roomList.push(_eventGroup);
+        emit GroupCreated(_eventGroup.eventId, _eventGroup.imageUrl, _eventGroup.title);
     }
 
     /**
@@ -399,9 +403,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /**
      * @dev Refund tickets for an event.
      * @param _eventId The ID of the event.
-     * @param _numberOfTickets The number of tickets to refund.
      */
-    function refundFee(uint32 _eventId,  uint32 _numberOfTickets) external {
+    function refundFee(uint32 _eventId) external {
         _validateId(_eventId);
         Event storage _event = events[_eventId];
         updateRegStatus(_eventId);
@@ -413,15 +416,12 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         if(_event.regStatus != RegStatus.OPEN) revert REGISTRATION_CLOSE();
         if(_ticket.owner != msg.sender) revert NOT_OWNER();
         if(_ticket.eventId != _eventId) revert INVALID_EVENT_ID();
-        if(_ticket.numberOfTicket < _numberOfTickets) revert INSUFFICIENT_TICKET_PURCHASED();
+        if(_ticket.numberOfTicket < 1) revert INSUFFICIENT_TICKET_PURCHASED();
 
-        uint256 _totalPrice = _numberOfTickets * _event.ticketPrice;
-        _event.seats = _event.seats - _numberOfTickets;
+        uint256 _totalPrice = _ticket.numberOfTicket * _event.ticketPrice;
+        _event.seats = _event.seats - _ticket.numberOfTicket;
         _event.totalSales =   _event.totalSales - _totalPrice;
-        _ticket.numberOfTicket = _ticket.numberOfTicket -_numberOfTickets;
-        if(_ticket.numberOfTicket == 0){
-        hasPurchasedEvent[msg.sender][_eventId] = false;
-        }
+    
         blumaToken.transfer(msg.sender, _totalPrice);
 
         emit RefundIssued(msg.sender, _ticket.ticketId, _eventId, _totalPrice);
@@ -562,44 +562,7 @@ function updateRegStatus(uint32 _eventId) internal {
         events_ = events[_eventId];
     }
 
-
-        /**
-     * @notice Retrieves all NFT token IDs minted for a specific event.
-     *@notice get function dont consume gas so to make it east to fetch data
-     * @param _eventId The ID of the event.
-     * @return An array of NFT token IDs.
-     */
-    function getEventNFTs(uint32 _eventId) external view returns (uint256[] memory) {
-        uint256 count = 0;
-        for (uint256 i = 0; i < tickets.length; i++) {
-            if (tickets[i].eventId == _eventId) {
-                count++;
-            }
-        }
-
-        uint256[] memory result = new uint256[](count);
-        uint256 index = 0;
-        for (uint256 i = 0; i < tickets.length; i++) {
-            if (tickets[i].eventId == _eventId) {
-                uint256[] memory userTokens = blumaNFT.tokensOfOwner(tickets[i].owner);
-                for (uint256 j = 0; j < userTokens.length; j++) {
-                    result[index] = userTokens[j];
-                    index++;
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @notice Retrieves all NFT token IDs owned by a specific user.
-     * @param _user The address of the user.
-     * @return An array of NFT token IDs owned by the user.
-     */
-    function getUserNFTs_(address _user) external view returns (uint256[] memory) {
-        return blumaNFT.tokensOfOwner(_user);
-    }
-
+  
 
     function getGroupMembers(uint32 _eventId) external view returns (Member[] memory) {
         _validateId(_eventId);
@@ -616,6 +579,10 @@ function updateRegStatus(uint32 _eventId) internal {
         Event storage _event = events[_eventId];
         if (_event.eventId == 0) revert GROUP_ALREADY_EXISTS();
         return _event.groups;
+    }
+
+    function getNfts(address _user) external view returns (NFT memory){
+        return nfts[_user];
     }
 
 

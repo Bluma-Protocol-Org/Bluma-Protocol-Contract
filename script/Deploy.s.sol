@@ -17,8 +17,8 @@ contract DeployScript is Script {
 
     function run() public {
 
-        address blumaToken = 0xaC6B502Cb08F6dA51Ac99F00Aa6938C1BE12A2f9;
-        address blumaNft = 0x844B5da40a1A9D6b1a106148dC296AD253D5D38F;
+        address blumaToken = 0x281E41407f887Fb2a520FDb7E77Ec75CE97f7B7e;
+        address blumaNft = 0x5b24f5942a98cDdC7384Ffd562Df61AfDa9A25A8;
 
         vm.startBroadcast();
 
