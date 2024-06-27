@@ -41,6 +41,9 @@ Our platform empowers event organizers to create dedicated groups for their even
 
 ## System Design
 
+<img src="src/image/Screenshot from 2024-06-27 21-03-26.png" alt="Bluma Logo" />
+
+
 ### Smart Contracts
 Bluma utilizes smart contracts to manage:
 - Ticket purchasing
