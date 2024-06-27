@@ -81,8 +81,8 @@ Bluma utilizes smart contracts to manage:
 
 ### Bluma Protocol
 - **Deployer**: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-- **Deployed to**: 0xDC9b9814Ddea9411b46ff62489743aB18cDe13A7
-- **Transaction hash**: 0x75ebde759662326bbe7687531c54525e53fcf4d6789a35926d8f4238ea76d73b
+- **Deployed to**: 0x843510a1b21E1a8C7e0cEdD819A541B9D2B7A1f6
+- **Transaction hash**: 0x8c46ab65c3e3640443d86a7a1e8c61293c019f514722486d97cbe22cfcdcf35b
 
 ## Backend Swagger Documentation
 Explore the comprehensive API documentation for Bluma:

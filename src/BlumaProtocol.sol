@@ -234,12 +234,12 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint96 _ticketPrice,
         bool _isEventPaid
     ) external {
-        if(bytes(_title).length < 1) revert EMPTY_INPUT_FIELD();
-        if(bytes(_imageUrl).length < 1)  revert EMPTY_INPUT_FIELD();
-        if(bytes(_description).length < 1) revert EMPTY_INPUT_FIELD();
-        if(bytes(_location).length < 1) revert EMPTY_INPUT_FIELD();
-        if(_regStartTime > _regEndTime) revert EMPTY_INPUT_FIELD();
-        if(_eventStartTime > _eventEndTime) revert EMPTY_INPUT_FIELD();
+    require(bytes(_title).length > 0, "Title cannot be empty");
+    require(bytes(_imageUrl).length > 0, "Image URL cannot be empty");
+    require(bytes(_description).length > 0, "Description cannot be empty");
+    require(bytes(_location).length > 0, "Location cannot be empty");
+    require(_regStartTime <= _regEndTime, "Registration start time must be before end time");
+    require(_eventStartTime <= _eventEndTime, "Event start time must be before end time");
     
         _totalEventsId = _totalEventsId + 1;
 
@@ -278,7 +278,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
 
    function mintNft(uint32 _eventId, string calldata _nftUrl) external {
-        if (bytes(_nftUrl).length < 1) revert EMPTY_INPUT_FIELD();
+        require(bytes(_nftUrl).length > 0, "NFT cannot be empty");
         // Mint NFTs to the event creator
         Event storage _event = events[_eventId];
         if (_event.eventId == 0) revert INVALID_ID();
@@ -433,7 +433,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
  * @dev Update registration status based on time.
  * @param _eventId The ID of the event.
  */
-function updateRegStatus(uint32 _eventId) internal {
+function updateRegStatus(uint32 _eventId) public {
     _validateId(_eventId);
     Event storage _event = events[_eventId];
 
