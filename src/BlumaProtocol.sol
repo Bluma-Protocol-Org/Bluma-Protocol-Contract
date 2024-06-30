@@ -196,9 +196,8 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _avatar the image of the user 
      */
     function createAccount(string memory _email, address _addr, string memory _avatar) external {
-        if(bytes(_email).length < 1) revert EMPTY_INPUT_FIELD();
-        if(bytes(_avatar).length < 1) revert EMPTY_INPUT_FIELD();
-
+        isNotEmpty(_email);
+        isNotEmpty(_avatar);
         User storage _user = user[_addr];
         _user.email = _email;
         _user.isRegistered = true;
@@ -234,14 +233,13 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint96 _ticketPrice,
         bool _isEventPaid
     ) external {
-    require(bytes(_title).length > 0, "Title cannot be empty");
-    require(bytes(_imageUrl).length > 0, "Image URL cannot be empty");
-    require(bytes(_description).length > 0, "Description cannot be empty");
-    require(bytes(_location).length > 0, "Location cannot be empty");
+        isNotEmpty(_title);
+        isNotEmpty(_imageUrl);
+        isNotEmpty(_description);
+        isNotEmpty(_location);
     require(_regStartTime <= _regEndTime, "Registration start time must be before end time");
     require(_eventStartTime <= _eventEndTime, "Event start time must be before end time");
-    
-        _totalEventsId = _totalEventsId + 1;
+            _totalEventsId = _totalEventsId + 1;
 
         Event memory _event;
         if (currentTime() < _regStartTime) {
@@ -275,11 +273,11 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
         emit EventCreated(_totalEventsId, _event.seats, _capacity);
     }
+ 
 
 
    function mintNft(uint32 _eventId, string calldata _nftUrl) external {
-        require(bytes(_nftUrl).length > 0, "NFT cannot be empty");
-        // Mint NFTs to the event creator
+        isNotEmpty(_nftUrl);
         Event storage _event = events[_eventId];
         if (_event.eventId == 0) revert INVALID_ID();
         if (_event.creator != msg.sender) revert INVALID_NOT_AUTHORIZED();
@@ -583,6 +581,13 @@ function updateRegStatus(uint32 _eventId) public {
 
     function getNfts(address _user) external view returns (NFT memory){
         return nfts[_user];
+    }
+
+
+    function isNotEmpty(string memory str) private  pure{
+        if (keccak256(bytes(str)) == keccak256(bytes(""))) {
+        revert EMPTY_INPUT_FIELD();
+        }
     }
 
 

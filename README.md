@@ -74,18 +74,18 @@ Bluma utilizes smart contracts to manage:
 
 ### Bluma Token
 - **Deployer**: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-- **Deployed to**: 0x281E41407f887Fb2a520FDb7E77Ec75CE97f7B7e
-- **Transaction hash**: 0x455037bb1677909d2d9dc3df29a74b5ce088fa2060eae5e8d2f9fe6230b665fc
+- **Deployed to**: 0xB3e20Ab089705dCBD9D6b9c28aE6b84b68b2Ee17
+- **Transaction hash**: 0x45e1d41ab341c309fa7005bcd9246217214dc0fef1d86dea99141970b2a8dc8d
 
 ### Bluma NFT
 - **Deployer**: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-- **Deployed to**: 0x5b24f5942a98cDdC7384Ffd562Df61AfDa9A25A8
-- **Transaction hash**: 0xd5a1378990b279b6ed5081478f7e8eaa6aa33132453c3b08b494a9eba429e388
+- **Deployed to**: 0xF9eFb8bf1296D0C04F1Ec638F7D0062529E3e2bC
+- **Transaction hash**: 0x7e93b6a5bc6262c195a90aa95159b0853f40f640d2b648db9d4243170d2c7d0a
 
 ### Bluma Protocol
 - **Deployer**: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-- **Deployed to**: 0x843510a1b21E1a8C7e0cEdD819A541B9D2B7A1f6
-- **Transaction hash**: 0x8c46ab65c3e3640443d86a7a1e8c61293c019f514722486d97cbe22cfcdcf35b
+- **Deployed to**: 0x813Df6D9c402369AE6304c07628FE2808585967f
+- **Transaction hash**: 0x79d1eca896bd6f920ecf0e2e18e95382bae4b6a41faf7babf4218df15c308212
 
 ## Backend Swagger Documentation
 Explore the comprehensive API documentation for Bluma:
