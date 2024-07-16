@@ -228,7 +228,7 @@ contract BlumaProtocolTest is Test {
 
     }
 
-    function testRefundTicketFee()external {
+    function testRefundTicketFee() external {
         testTwoUserCanPurchaseTicket();
         switchSigner(B);
 
@@ -249,6 +249,7 @@ contract BlumaProtocolTest is Test {
 
 
     }
+    
     function testWithdrawFee() external {
         testTwoUserCanPurchaseTicket();
         switchSigner(owner);

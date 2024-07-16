@@ -10,20 +10,17 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 contract DeployScript is Script {
     BlumaProtocol blumaProtocol;
     ERC1967Proxy proxy;
-    // BlumaToken blumaToken;
-    // BlumaNFT blumaNft;
+    BlumaToken blumaToken;
+    BlumaNFT blumaNft;
 
     function setUp() public {}
 
     function run() public {
 
-        address blumaToken = 0xB3e20Ab089705dCBD9D6b9c28aE6b84b68b2Ee17;
-        address blumaNft = 0xF9eFb8bf1296D0C04F1Ec638F7D0062529E3e2bC;
-
         vm.startBroadcast();
 
-        // blumaToken = new BlumaToken();
-        // blumaNft = new BlumaNFT();
+        blumaToken = new BlumaToken();
+        blumaNft = new BlumaNFT();
 
         // Deploy the implementation contract
         BlumaProtocol implementation = new BlumaProtocol();
@@ -37,8 +34,8 @@ contract DeployScript is Script {
         // Log the addresses of the proxy and the implementation contract
         console.log("Proxy ADDRESS:", address(proxy));
         console.log("BLUMA PROTOCOL Implementation Address:", address(implementation));
-        // console.log("BLUMA TOKEN Implementation Address:", address(blumaToken));
-        // console.log("BLUMA NFT Implementation Address:", address(blumaNft));
+        console.log("BLUMA TOKEN Implementation Address:", address(blumaToken));
+        console.log("BLUMA NFT Implementation Address:", address(blumaNft));
 
         
 

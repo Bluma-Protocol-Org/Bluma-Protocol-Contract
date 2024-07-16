@@ -72,21 +72,10 @@ Bluma utilizes smart contracts to manage:
 
 ## Smart Contract Addresses
 
-### Bluma Token
-- **Deployer**: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-- **Deployed to**: 0xB3e20Ab089705dCBD9D6b9c28aE6b84b68b2Ee17
-- **Transaction hash**: 0x45e1d41ab341c309fa7005bcd9246217214dc0fef1d86dea99141970b2a8dc8d
-
-### Bluma NFT
-- **Deployer**: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-- **Deployed to**: 0xF9eFb8bf1296D0C04F1Ec638F7D0062529E3e2bC
-- **Transaction hash**: 0x7e93b6a5bc6262c195a90aa95159b0853f40f640d2b648db9d4243170d2c7d0a
-
-### Bluma Protocol
-- **Deployer**: 0x3fb7B6793bF753E74bf776ff386256a7FD9F7bee
-- **Deployed to**: 0x813Df6D9c402369AE6304c07628FE2808585967f
-- **Transaction hash**: 0x79d1eca896bd6f920ecf0e2e18e95382bae4b6a41faf7babf4218df15c308212
-
+ - **Proxy ADDRESS**: 0x78FedF15d3b78186E171Ec661747a0A51D7993d4
+-  **BLUMA PROTOCOL Implementation Address**: 0x8199a8eE572d05221c1CDB908c868435399241c4
+-  **BLUMA TOKEN Implementation Address**: 0x48f550AD1D8031298e29e1Ae9FC2e0f793150AF4
+-  **BLUMA NFT Implementation Address**: 0x813549cf875d91c60Cb819aA5BfF0838b8bd4134
 ## Backend Swagger Documentation
 Explore the comprehensive API documentation for Bluma:
 - [Swagger Docs](https://bluma-protocol-backend.onrender.com/swagger-ui/index.html#/)

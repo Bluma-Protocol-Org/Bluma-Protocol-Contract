@@ -18,6 +18,7 @@ contract BlumaNFT is ERC721URIStorage {
     function getNextTokenId() external view returns (uint256) {
         return _nextTokenId;
     }
+    
 
     function ownerOf(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
         return super.ownerOf(tokenId);
