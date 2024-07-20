@@ -207,7 +207,7 @@ contract BlumaProtocolTest is Test {
            vm.expectRevert(
             abi.encodeWithSelector(USER_ALREADY_EXCEED_LIMIT.selector)
         );
-        blumaToken.mint( B, 20 ether);
+        blumaToken.mint( B, 20000 ether);
     }
 
     function testTwoUserCanPurchaseTicket() public{

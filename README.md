@@ -72,10 +72,10 @@ Bluma utilizes smart contracts to manage:
 
 ## Smart Contract Addresses
 
-- **Proxy ADDRESS**: 0xb3DC0CE17431fB886dB021e8b2c46C258f700e00
-- **BLUMA PROTOCOL Implementation Address**: 0x11B58E807F4A9e6dc5d1C002Bb612F154753cf69
-- **BLUMA TOKEN Implementation Address**: 0x416221f12Ae28106B6422c3720997049B406aE52
-- **BLUMA NFT Implementation Address**: 0x41576277094A6f2906e9a8cEe61a36857Db9D0A6
+- **Proxy ADDRESS**: 0x564F99d8941c078E81C16eb6d09ddAE143900301
+- **BLUMA PROTOCOL Implementation Address**: 0x8d9a89Fbdd80a891a085a70746C39f43504EeE14
+- **BLUMA TOKEN Implementation Address**: 0xfCf25E2c1d08E88169C9c6dde127020513207A16
+- **BLUMA NFT Implementation Address**: 0xb6B3688685cCa9eC17bC96d5E6d0FC7CB1BDaFfe
 ## Backend Swagger Documentation
 Explore the comprehensive API documentation for Bluma:
 - [Swagger Docs](https://bluma-protocol-backend-zc9u.onrender.com/swagger-ui/index.html#)
@@ -98,6 +98,5 @@ Bluma isn't just another event platform; it's a revolution in how we connect, so
 - **Hackathon Organizers**: Thank you for providing this platform to showcase innovative solutions.
 - **Team Bluma**: Dedicated developers, designers, and visionaries who brought this project to life.
 - **web3bridge**
-
 - **semicolon Africa** 
 

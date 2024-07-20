@@ -9,9 +9,9 @@ contract BlumaToken {
     uint256 private _totalSupply;
     address private owner;
 
-    uint256 private constant MAX_TOTAL_SUPPLY = 10000000000; // Maximum total supply
+    uint256 private constant MAX_TOTAL_SUPPLY = 10000000000 * 10**18; // Maximum total supply with decimals
     uint256 private totalMinted; // Tracks the total minted tokens
-    uint256 private constant MINT_AMOUNT = 2000; // Max amount a user can mint
+    uint256 private constant MINT_AMOUNT = 2000 * 10**18; // Max amount a user can mint with decimals
     mapping(address => bool) private _hasMinted;
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
