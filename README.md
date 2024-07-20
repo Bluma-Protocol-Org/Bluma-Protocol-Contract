@@ -78,7 +78,7 @@ Bluma utilizes smart contracts to manage:
 - **BLUMA NFT Implementation Address**: 0x41576277094A6f2906e9a8cEe61a36857Db9D0A6
 ## Backend Swagger Documentation
 Explore the comprehensive API documentation for Bluma:
-- [Swagger Docs](https://bluma-protocol-backend.onrender.com/swagger-ui/index.html#/)
+- [Swagger Docs](https://bluma-protocol-backend-zc9u.onrender.com/swagger-ui/index.html#)
 
 ## Future Prospects
 
