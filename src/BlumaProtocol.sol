@@ -7,8 +7,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Validator} from "../src/Library/Validator.sol";
 import "./Library/Error.sol";
-import "./interface/IERC20s.sol";
-import "./interface/IERC721s.sol";
+import "./BlumaToken.sol";
+import "./BlumaNfts.sol";
+// import "./interface/IERC20s.sol";
+// import "./interface/IERC721s.sol";
 
 
 /// @title The Proxy Contract for the protocol
@@ -63,10 +65,10 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     User[] private usersList;
 
     /// @notice ERC20 token used in the protocol
-    IERC20s private blumaToken;
+    BlumaToken private blumaToken;
 
     /// @notice ERC721 token used in the protocol
-    IERC721s private blumaNFT;
+    BlumaNFT private blumaNFT;
 
 
 
@@ -341,7 +343,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _eventId The ID of the event.
      * @param _numberOfTickets The number of tickets to purchase.
      */
-    function purchaseTicket(uint32 _eventId, uint32 _numberOfTickets) external {
+    function purchaseFreeTicket(uint32 _eventId, uint32 _numberOfTickets) external {
         _validateId(_eventId);
         Event storage _event = events[_eventId];
         if (_event.regStatus != RegStatus.OPEN) revert REGISTRATION_NOT_OPEN();
@@ -350,28 +352,49 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _ticketId =   _ticketId + 1;
         Ticket storage _ticket = ticket[msg.sender];
 
-        uint256 _totalPrice = 0;
-        if (_event.eventType == EventType.PAID) {
-            _totalPrice = _numberOfTickets * _event.ticketPrice;
+        _ticket.ticketId = _ticketId;
+        _ticket.owner = msg.sender;
+        _ticket.purchaseTime = currentTime();
+        _ticket.eventId = _eventId;
+        _ticket.numberOfTicket = _ticket.numberOfTicket + _numberOfTickets;
+        tickets.push(_ticket);
+        emit TicketPurchased(msg.sender, _eventId, _numberOfTickets);
+    }
+
+
+        /**
+     * @dev Purchase tickets for an event.
+     * @param _eventId The ID of the event.
+     * @param _numberOfTickets The number of tickets to purchase.
+     */
+    function purchasePaidTicket(uint32 _eventId, uint32 _numberOfTickets) external {
+        _validateId(_eventId);
+        _ticketId =   _ticketId + 1;
+        Event storage _event = events[_eventId];
+         _event.seats = _event.seats + _numberOfTickets; 
+
+        if (_event.regStatus != RegStatus.OPEN) revert REGISTRATION_NOT_OPEN();
+        if ( _event.seats > _event.capacity) revert NOT_ENOUGH_AVAILABLE_SEAT();
+        if (_event.eventType != EventType.PAID) revert NOT_PAID_EVENT();
+        Ticket storage _ticket = ticket[msg.sender];
+
+        uint256   _totalPrice = _numberOfTickets * _event.ticketPrice;
+
             if (blumaToken.balanceOf(msg.sender) < _totalPrice) revert INSUFFICIENT_BALANCE();
             if (blumaToken.allowance(msg.sender, address(this)) < _totalPrice) revert NO_ALLOWANCE();
             blumaToken.transferFrom(msg.sender, address(this), _totalPrice);
             _event.totalSales = _event.totalSales + _totalPrice;
             _ticket.ticketCost = _ticket.ticketCost + _totalPrice;
-        }
-
+        
         _ticket.ticketId = _ticketId;
         _ticket.owner = msg.sender;
         _ticket.purchaseTime = currentTime();
         _ticket.eventId = _eventId;
-        _ticket.ticketCost = _ticket.ticketCost + _totalPrice;
         _ticket.numberOfTicket = _ticket.numberOfTicket + _numberOfTickets;
         tickets.push(_ticket);
-        hasPurchasedEvent[msg.sender][_eventId] = true;
+        
         emit TicketPurchased(msg.sender, _eventId, _numberOfTickets);
     }
-
-
 
     function groupChat(uint32 _eventId, string calldata _text) external {
         _validateId(_eventId);
@@ -676,8 +699,8 @@ function updateRegStatus(uint32 _eventId) public {
     function initialize(address initialOwner, address _blumaToken, address _blumaNFT) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        blumaToken = IERC20s(_blumaToken);
-        blumaNFT = IERC721s(_blumaNFT);
+        blumaToken = BlumaToken(_blumaToken);
+        blumaNFT = BlumaNFT(_blumaNFT);
     }
 
     /**

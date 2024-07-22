@@ -196,7 +196,7 @@ contract BlumaProtocolTest is Test {
         switchSigner(B);
         blumaToken.mint( B, 2000);
         blumaToken.approve(address(blumaProtocol), 2000);
-        blumaProtocol.purchaseTicket(1, 5);
+        blumaProtocol.purchaseFreeTicket(1, 5);
         uint ticketCount = blumaProtocol.getAllTickets().length;
         assertEq(ticketCount, 1);
     }
@@ -215,14 +215,14 @@ contract BlumaProtocolTest is Test {
         switchSigner(B);
         blumaToken.mint( B, 2000);
         blumaToken.approve(address(blumaProtocol), 2000);
-        blumaProtocol.purchaseTicket(1, 5);
+        blumaProtocol.purchasePaidTicket(1, 5);
         uint ticketCount = blumaProtocol.getAllTickets().length;
         assertEq(ticketCount, 1);
 
         switchSigner(C);
         blumaToken.mint( C, 2000);
         blumaToken.approve(address(blumaProtocol), 2000);
-        blumaProtocol.purchaseTicket(1, 1);
+        blumaProtocol.purchasePaidTicket(1, 1);
         uint ticketCount2 = blumaProtocol.getAllTickets().length;
         assertEq(ticketCount2, 2);
 
