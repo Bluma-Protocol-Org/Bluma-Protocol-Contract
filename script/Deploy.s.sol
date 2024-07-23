@@ -22,15 +22,20 @@ contract DeployScript is Script {
         blumaToken = new BlumaToken();
         blumaNft = new BlumaNFT();
 
-        // Deploy the implementation contract
+            // Deploy the implementation contract
         BlumaProtocol implementation = new BlumaProtocol();
 
         // Deploy the proxy and initialize the contract through the proxy
         proxy = new ERC1967Proxy(
             address(implementation),
-            abi.encodeWithSelector(implementation.initialize.selector, msg.sender,blumaToken, blumaNft)
+            abi.encodeCall(
+            implementation.initialize,
+            (msg.sender,
+            address(blumaToken),
+            address(blumaNft)
+            )
+            )
         );
-
         // Log the addresses of the proxy and the implementation contract
         console.log("Proxy ADDRESS:", address(proxy));
         console.log("BLUMA PROTOCOL Implementation Address:", address(implementation));
