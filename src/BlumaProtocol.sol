@@ -198,8 +198,9 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @param _avatar the image of the user 
      */
     function createAccount(string memory _email, address _addr, string memory _avatar) external {
-        isNotEmpty(_email);
-        isNotEmpty(_avatar);
+            
+        if(bytes(_email).length < 1) revert EMPTY_INPUT_FIELD();
+        if(bytes(_avatar).length < 1) revert EMPTY_INPUT_FIELD();
         User storage _user = user[_addr];
         _user.email = _email;
         _user.isRegistered = true;
@@ -235,10 +236,10 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint96 _ticketPrice,
         bool _isEventPaid
     ) external {
-        isNotEmpty(_title);
-        isNotEmpty(_imageUrl);
-        isNotEmpty(_description);
-        isNotEmpty(_location);
+     if(bytes(_title).length < 1) revert EMPTY_INPUT_FIELD();
+        if(bytes(_imageUrl).length < 1) revert EMPTY_INPUT_FIELD();
+        if(bytes(_description).length < 1) revert EMPTY_INPUT_FIELD();
+        if(bytes(_location).length < 1) revert EMPTY_INPUT_FIELD();
     require(_regStartTime <= _regEndTime, "Registration start time must be before end time");
     require(_eventStartTime <= _eventEndTime, "Event start time must be before end time");
             _totalEventsId = _totalEventsId + 1;
@@ -279,7 +280,7 @@ contract BlumaProtocol is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
 
    function mintNft(uint32 _eventId, string calldata _nftUrl) external {
-        isNotEmpty(_nftUrl);
+        if(bytes(_nftUrl).length < 1) revert EMPTY_INPUT_FIELD();
         Event storage _event = events[_eventId];
         if (_event.eventId == 0) revert INVALID_ID();
         if (_event.creator != msg.sender) revert INVALID_NOT_AUTHORIZED();
@@ -698,7 +699,7 @@ function updateRegStatus(uint32 _eventId) public {
      */
     function initialize(address initialOwner, address _blumaToken, address _blumaNFT) public initializer {
         __Ownable_init(initialOwner);
-        __UUPSUpgradeable_init();
+        // __UUPSUpgradeable_init();
         blumaToken = BlumaToken(_blumaToken);
         blumaNFT = BlumaNFT(_blumaNFT);
     }

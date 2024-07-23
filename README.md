@@ -72,10 +72,10 @@ Bluma utilizes smart contracts to manage:
 
 ## Smart Contract Addresses
 
-  Proxy ADDRESS: 0xa89b00E1E332C108A8664A25f8A2D9ccBF900304
-  BLUMA PROTOCOL Implementation Address: 0x5163d23402EBA149De50C981b16F621a89b35Fdd
-  BLUMA TOKEN Implementation Address: 0xFfC7F850940b42C32e84cB83a36A50699179c2Ac
-  BLUMA NFT Implementation Address: 0x42c679882774096345c7DdB98CbA600443562328
+- **Proxy ADDRESS**: 0x74858999091E106584B0b550335345d938229B9a
+- **BLUMA PROTOCOL Implementation Address**: 0x5B91043Ff7D644134BcFc833B6a802eeA55A1Fa0
+- **BLUMA TOKEN Implementation Address**: 0x442e55Dc7D7c830aE32090B2111CF3C2277140E6
+- **BLUMA NFT Implementation Address**: 0x282692CCa18B44996aB3C6fAFB9A37C608D1371F
 ## Backend Swagger Documentation
 Explore the comprehensive API documentation for Bluma:
 - [Swagger Docs](https://bluma-protocol-backend-zc9u.onrender.com/swagger-ui/index.html#)
